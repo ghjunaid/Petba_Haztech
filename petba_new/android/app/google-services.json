@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "932804060540",
+    "project_id": "chatnotification-ea545",
+    "storage_bucket": "chatnotification-ea545.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:932804060540:android:0fd9648cf931b52badf0f9",
+        "android_client_info": {
+          "package_name": "com.example.petba_new"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJmlobfx_bc1-NX2T2rYDLahy4ngX5Jo8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:932804060540:android:d6105ff0331858bbadf0f9",
+        "android_client_info": {
+          "package_name": "com.example.project1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJmlobfx_bc1-NX2T2rYDLahy4ngX5Jo8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:932804060540:android:1667f60857b59629adf0f9",
+        "android_client_info": {
+          "package_name": "com.notification"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJmlobfx_bc1-NX2T2rYDLahy4ngX5Jo8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
