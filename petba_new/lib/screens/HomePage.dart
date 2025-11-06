@@ -45,6 +45,7 @@ class _HomePageState extends State<HomePage> {
   // API data for dashboard
   List<AdoptionPet> _adoptionPets = [];
   List<DashboardProduct> _latestProducts = [];
+  List<DashboardProduct> _featuredProducts = [];
   List<DashboardProduct> _specialProducts = [];
   List<BannerItem> _banners = [];
   bool _isLoadingDashboard = true;
@@ -226,6 +227,7 @@ class _HomePageState extends State<HomePage> {
         print("ADOPTION: ${jsonEncode(data['adoption'])}");
         print("LATEST: ${jsonEncode(data['latest'])}");
         print("SPECIAL: ${jsonEncode(data['special'])}");
+        print("FEATURED: ${jsonEncode(data['featured'])}");
         print("RESCUE: ${jsonEncode(data['rescueListhome'])}");
 
         // adoption (original is already a List)
@@ -243,6 +245,13 @@ class _HomePageState extends State<HomePage> {
         final latestProductsData =
             data['latest']?['original']?['latestproduct'] ?? [];
         final latestProducts = (latestProductsData as List)
+            .map((item) => DashboardProduct.fromJson(item))
+            .toList();
+
+        // featured products (inside featuredproducts list)
+        final featuredProductsData =
+            data['featured']?['original']?['featuredproducts'] ?? [];
+        final featuredProducts = (featuredProductsData as List)
             .map((item) => DashboardProduct.fromJson(item))
             .toList();
 
@@ -273,6 +282,7 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           _adoptionPets = filteredAdoptionPets;
           _latestProducts = latestProducts;
+          _featuredProducts = featuredProducts;
           _specialProducts = specialProducts;
           _banners = banners;
           _isLoadingDashboard = false;
@@ -1037,6 +1047,39 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: 16),
 
+            // Featured Products Section (using API data)
+            if (_featuredProducts.isNotEmpty) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Featured Products',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.white,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => ProductsPage()),
+                      );
+                    },
+                    child: Text(
+                      'View All',
+                      style: TextStyle(color: AppColors.blue, fontSize: 14),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8),
+              Container(height: 200, child: _buildFeaturedProductsList()),
+              SizedBox(height: 20),
+            ],
+
             // Latest Products Section (using API data)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1297,6 +1340,22 @@ class _HomePageState extends State<HomePage> {
       itemCount: _latestProducts.length,
       itemBuilder: (context, index) {
         return _buildDashboardProductCard(_latestProducts[index]);
+      },
+    );
+  }
+
+  // Method to build featured products list with API data
+  Widget _buildFeaturedProductsList() {
+    if (_isLoadingDashboard) {
+      return Center(child: CircularProgressIndicator(color: AppColors.blue));
+    }
+
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      padding: EdgeInsets.symmetric(horizontal: 4),
+      itemCount: _featuredProducts.length,
+      itemBuilder: (context, index) {
+        return _buildDashboardProductCard(_featuredProducts[index]);
       },
     );
   }
@@ -2270,7 +2329,7 @@ class _HomePageState extends State<HomePage> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: Image.network(
-                          '$apiurl/${product.image}',
+                          '$producturl/${product.image}',
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(

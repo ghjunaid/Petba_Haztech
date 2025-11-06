@@ -130,66 +130,66 @@ class DashboardController
 
     public function featuredProducts(Request $request)
     {
-        // Get product IDs from request and convert to array of integers
-        $ids = $request->input('product', []);
-        if (is_string($ids)) {
-            $ids = explode(',', $ids);
-        }
-        $ids = array_map('intval', $ids);
+		// Get product IDs from request and convert to array of integers
+		$ids = $request->input('product', []);
+		if (is_string($ids)) {
+			$ids = explode(',', $ids);
+		}
+		$ids = array_map('intval', $ids);
 
-        // Return error if no products specified
-        if (empty($ids)) {
-            return response()->json(['error' => 'No products specified'], 400);
-        }
+		try {
+			$query = DB::table('oc_product as p')
+				->join('oc_product_description as pd', 'p.product_id', '=', 'pd.product_id')
+				->join('oc_product_to_category as ptc', 'p.product_id', '=', 'ptc.product_id')
+				->join('oc_category_description as cate', 'ptc.category_id', '=', 'cate.category_id')
+				->join('oc_manufacturer', 'p.manufacturer_id', '=', 'oc_manufacturer.manufacturer_id')
 
-        try {
-            $products = DB::table('oc_product as p')
-                ->join('oc_product_description as pd', 'p.product_id', '=', 'pd.product_id')
-                ->join('oc_product_to_category as ptc', 'p.product_id', '=', 'ptc.product_id')
-                ->join('oc_category_description as cate', 'ptc.category_id', '=', 'cate.category_id')
-                ->join('oc_manufacturer', 'p.manufacturer_id', '=', 'oc_manufacturer.manufacturer_id')
+				// Subquery for discount prices
+				->leftJoin(DB::raw('(
+					SELECT product_id, MIN(price) AS discount
+					FROM oc_product_discount
+					WHERE DATE(date_start) <= CURDATE() AND DATE(date_end) >= CURDATE()
+					GROUP BY product_id
+				) as dis'), 'p.product_id', '=', 'dis.product_id')
 
-                // Subquery for discount prices
-                ->leftJoin(DB::raw('(
-                    SELECT product_id, MIN(price) AS discount
-                    FROM oc_product_discount
-                    WHERE DATE(date_start) <= CURDATE() AND DATE(date_end) >= CURDATE()
-                    GROUP BY product_id
-                ) as dis'), 'p.product_id', '=', 'dis.product_id')
+				// Subquery for special prices
+				->leftJoin(DB::raw('(
+					SELECT product_id, MIN(price) AS specialprice
+					FROM oc_product_special
+					WHERE DATE(date_start) <= CURDATE() AND DATE(date_end) >= CURDATE()
+					GROUP BY product_id
+				) as special'), 'p.product_id', '=', 'special.product_id')
 
-                // Subquery for special prices
-                ->leftJoin(DB::raw('(
-                    SELECT product_id, MIN(price) AS specialprice
-                    FROM oc_product_special
-                    WHERE DATE(date_start) <= CURDATE() AND DATE(date_end) >= CURDATE()
-                    GROUP BY product_id
-                ) as special'), 'p.product_id', '=', 'special.product_id')
+				->where('p.status', 1)
+				->where('p.quantity', '>', 0)
+				->select(
+					'p.product_id',
+					'p.model',
+					'pd.name',
+					'pd.description',
+					'p.quantity',
+					'p.image',
+					'p.price',
+					'special.specialprice',
+					'dis.discount',
+					'cate.name as category',
+					'oc_manufacturer.name as brand'
+				)
+				->orderBy('p.product_id')
+				->limit(5);
 
-                ->whereIn('p.product_id', $ids)
-                ->where('p.status', 1)
-                ->where('p.quantity', '>', 0)
-                ->select(
-                    'p.product_id',
-                    'p.model',
-                    'pd.name',
-                    'pd.description',
-                    'p.quantity',
-                    'p.image',
-                    'p.price',
-                    'special.specialprice',
-                    'dis.discount',
-                    'cate.name as category',
-                    'oc_manufacturer.name as brand'
-                )
-                ->orderBy('p.product_id')
-                ->limit(5)
-                ->get();
+			// If specific product IDs are provided, filter by them; otherwise, return default selection
+			if (!empty($ids)) {
+				$query->whereIn('p.product_id', $ids);
+			}
 
-            return response()->json(['featuredproducts' => $products]);
+			$products = $query->get();
 
-        } catch (\Exception $e) {
-            return response()->json(['error' => ['text' => $e->getMessage()]], 500);
-        }
+			return response()->json(['featuredproducts' => $products]);
+
+		} catch (\Exception $e) {
+			return response()->json(['error' => ['text' => $e->getMessage()]], 500);
+		}
     }
 
 

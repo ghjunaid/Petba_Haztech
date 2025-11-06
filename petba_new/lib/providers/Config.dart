@@ -24,18 +24,18 @@ class AppColors {
   static Color primaryLight = Color(0xFF2d2d2d).withOpacity(0.7);
 }
 
-String apiurl = 'http://192.168.0.157:8000';
-//String apiurl= 'http://10.0.2.2:8000';
-// String apiurl= 'https://azure-deer-846524.hostingersite.com/petba.in/petbalaravel/public';
+String apiurl = 'http://192.168.0.157:8000'; // Mobile ip
+//String apiurl= 'http://10.0.2.2:8000'; // Emulator/Local ip
+// String apiurl= 'https://petba.in/petbalaravel/public';
 
 //For chat page
-const String baseUrl = 'http://10.237.219.141:8000';
+const String baseUrl = 'http://192.168.0.157:8000';
 
 //The server base url
-String serverIp = 'http://192.168.0.146'; //Haztech Wifi
+String serverIp = 'http://192.168.0.157:8000'; //Haztech Wifi
 // String serverIp = 'http://192.168.15.37'; //My phone
 
-String producturl = 'https://azure-deer-846524.hostingersite.com/petba.in/image';
+String producturl = 'https://petba.in/image';
 
 // The api keys for the google maps. Vets and Groomers
 const String googleMapsApiKey = "AIzaSyDMwyFExzv-Mvp6NxuECQTacnNun1I0JI4";

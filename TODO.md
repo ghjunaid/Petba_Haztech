@@ -1,0 +1,3 @@
+- [ ] Modify featuredProducts() in DashboardController.php to fetch product IDs from oc_module if none provided in request
+- [ ] If no IDs from module, fetch first 5 products as default
+- [ ] Test the dashboard API to ensure featured returns products instead of error
