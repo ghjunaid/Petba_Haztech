@@ -59,9 +59,7 @@ class _ProductsPageState extends State<ProductsPage> {
 
       final response = await http.get(
         Uri.parse('$apiurl/api/latestproduct'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
@@ -69,8 +67,15 @@ class _ProductsPageState extends State<ProductsPage> {
         final List<dynamic> productsJson = data['latestproduct'];
         print('Products response: ${response.body}');
 
+        // Deduplicate products by productId to handle products in multiple categories
+        Map<int, Product> productMap = {};
+        for (var json in productsJson) {
+          Product product = Product.fromJson(json);
+          productMap[product.productId] = product;
+        }
+
         setState(() {
-          _allProducts = productsJson.map((json) => Product.fromJson(json)).toList();
+          _allProducts = productMap.values.toList();
           _isLoading = false;
         });
       } else {
@@ -91,7 +96,9 @@ class _ProductsPageState extends State<ProductsPage> {
   List<Product> get _filteredProducts {
     List<Product> filtered = _selectedCategory == 'All'
         ? _allProducts
-        : _allProducts.where((p) => p.category == _selectedCategory).toList();
+        : _allProducts
+              .where((p) => p.categories.contains(_selectedCategory))
+              .toList();
 
     switch (_sortBy) {
       case 'Price: Low to High':
@@ -107,7 +114,7 @@ class _ProductsPageState extends State<ProductsPage> {
         filtered.sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
         break;
       default:
-      // Sort by quantity or product_id as default
+        // Sort by quantity or product_id as default
         filtered.sort((a, b) => b.quantity.compareTo(a.quantity));
     }
 
@@ -173,7 +180,7 @@ class _ProductsPageState extends State<ProductsPage> {
     }
   }
 
-// Also add this method for adding to cart functionality
+  // Also add this method for adding to cart functionality
   Future<void> _addToCart(Product product) async {
     try {
       final authData = await UserDataService.getAuthData();
@@ -194,8 +201,8 @@ class _ProductsPageState extends State<ProductsPage> {
           "email": authData['email'],
           "token": authData['token'],
           "product_id": product.productId,
-          "qty": 1 // Default quantity
-        }
+          "qty": 1, // Default quantity
+        },
       };
 
       final response = await http.post(
@@ -224,7 +231,8 @@ class _ProductsPageState extends State<ProductsPage> {
               ),
             ),
           );
-        } else if (data['added'] != null && data['added'] == "product already added to cart") {
+        } else if (data['added'] != null &&
+            data['added'] == "product already added to cart") {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('${product.name} is already in your cart'),
@@ -251,7 +259,6 @@ class _ProductsPageState extends State<ProductsPage> {
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -363,9 +370,7 @@ class _ProductsPageState extends State<ProductsPage> {
             ),
           ),
           // Products Grid or Loading/Error states
-          Expanded(
-            child: _buildBody(),
-          ),
+          Expanded(child: _buildBody()),
         ],
       ),
     );
@@ -373,9 +378,7 @@ class _ProductsPageState extends State<ProductsPage> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_error.isNotEmpty) {
@@ -383,18 +386,11 @@ class _ProductsPageState extends State<ProductsPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.grey.shade400,
-            ),
+            Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
               _error,
-              style: TextStyle(
-                color: Colors.grey.shade400,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.grey.shade400, fontSize: 16),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -420,10 +416,7 @@ class _ProductsPageState extends State<ProductsPage> {
             const SizedBox(height: 16),
             Text(
               'No products found',
-              style: TextStyle(
-                color: Colors.grey.shade400,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.grey.shade400, fontSize: 16),
             ),
           ],
         ),
@@ -446,13 +439,16 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 
   Widget _buildProductCard(Product product) {
-    final originalPrice = product.specialPrice != null ?
-    double.parse(product.price.toString()) : 0.0;
-    final currentPrice = product.specialPrice != null ?
-    double.parse(product.specialPrice.toString()) : double.parse(product.price.toString());
+    final originalPrice = product.specialPrice != null
+        ? double.parse(product.price.toString())
+        : 0.0;
+    final currentPrice = product.specialPrice != null
+        ? double.parse(product.specialPrice.toString())
+        : double.parse(product.price.toString());
 
-    final discountPercent = product.specialPrice != null ?
-    ((originalPrice - currentPrice) / originalPrice * 100).round() : 0;
+    final discountPercent = product.specialPrice != null
+        ? ((originalPrice - currentPrice) / originalPrice * 100).round()
+        : 0;
 
     return GestureDetector(
       onTap: () => _showProductDetails(product),
@@ -581,7 +577,10 @@ class _ProductsPageState extends State<ProductsPage> {
                         const SizedBox(height: 2),
                         Text(
                           product.brand ?? 'Pet Store',
-                          style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey.shade600,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -750,8 +749,11 @@ class _ProductsPageState extends State<ProductsPage> {
 
   String _stripHtmlTags(String htmlText) {
     RegExp exp = RegExp(r"<[^>]*>", multiLine: true, caseSensitive: true);
-    return htmlText.replaceAll(exp, '').replaceAll('&quot;', '"').replaceAll('&lt;', '<').replaceAll('&gt;', '>').replaceAll('&amp;', '&');
+    return htmlText
+        .replaceAll(exp, '')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&amp;', '&');
   }
 }
-
-

@@ -143,7 +143,7 @@ class ProductController
                     'p.price',
                     'sp.price as specialprice',
                     'd.price as discount',
-                    'cd.name as category',
+                    DB::raw('GROUP_CONCAT(DISTINCT cd.name SEPARATOR ", ") as categories'),
                     'm.name as brand'
                 )
                 ->leftjoin('oc_product_description as pd', 'p.product_id', '=', 'pd.product_id')
@@ -155,22 +155,22 @@ class ProductController
                 ->leftjoin('oc_category_description as cd', 'c.category_id', '=', 'cd.category_id')
                 ->leftjoin('oc_manufacturer as m', 'p.manufacturer_id', '=', 'm.manufacturer_id')
                 ->leftJoin(DB::raw('(
-                    SELECT product_id, price 
-                    FROM oc_product_special 
-                    WHERE CURDATE() BETWEEN date_start AND date_end 
+                    SELECT product_id, price
+                    FROM oc_product_special
+                    WHERE CURDATE() BETWEEN date_start AND date_end
                     ORDER BY priority ASC, price ASC
                 ) as sp'), 'p.product_id', '=', 'sp.product_id')
                 ->leftJoin(DB::raw('(
-                    SELECT product_id, price 
-                    FROM oc_product_discount 
-                    WHERE CURDATE() BETWEEN date_start AND date_end 
+                    SELECT product_id, price
+                    FROM oc_product_discount
+                    WHERE CURDATE() BETWEEN date_start AND date_end
                     ORDER BY priority ASC, price ASC
                 ) as d'), 'p.product_id', '=', 'd.product_id')
                 ->where('p.status', 1)
                 ->where('p.quantity', '>', 0)
                 ->groupBy([
-                    'p.product_id', 'p.model', 'pd.name', 'pd.description', 'p.quantity', 
-                    'p.image', 'p.price', 'sp.price', 'd.price', 'cd.name', 'm.name'
+                    'p.product_id', 'p.model', 'pd.name', 'pd.description', 'p.quantity',
+                    'p.image', 'p.price', 'sp.price', 'd.price', 'm.name'
                 ])
                 ->orderByDesc('p.product_id')
                 // ->limit(10)

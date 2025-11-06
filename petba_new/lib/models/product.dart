@@ -1,4 +1,3 @@
-
 class ProductDetail {
   final int productId;
   final String name;
@@ -40,9 +39,12 @@ class ProductDetail {
     double originalPrice = 0.0;
 
     try {
-      if (json['specialprice'] != null && json['specialprice'].toString().isNotEmpty && json['specialprice'].toString() != 'null') {
+      if (json['specialprice'] != null &&
+          json['specialprice'].toString().isNotEmpty &&
+          json['specialprice'].toString() != 'null') {
         currentPrice = double.tryParse(json['specialprice'].toString()) ?? 0.0;
-        originalPrice = double.tryParse(json['price'].toString()) ?? currentPrice;
+        originalPrice =
+            double.tryParse(json['price'].toString()) ?? currentPrice;
       } else {
         currentPrice = double.tryParse(json['price'].toString()) ?? 0.0;
         originalPrice = currentPrice;
@@ -82,13 +84,17 @@ class Product {
   final String price;
   final String? specialPrice;
   final String? discount;
-  final String category;
+  final List<String> categories;
   final String? brand;
 
   // Computed properties for compatibility
   double get rating => 4.5; // Default rating since API doesn't provide it
   int get reviews => quantity * 2; // Estimate reviews based on quantity
   DateTime get dateAdded => DateTime.now(); // Default to current date
+
+  // Primary category for display purposes
+  String get primaryCategory =>
+      categories.isNotEmpty ? categories[0] : 'General';
 
   Product({
     required this.productId,
@@ -100,7 +106,7 @@ class Product {
     required this.price,
     this.specialPrice,
     this.discount,
-    required this.category,
+    required this.categories,
     this.brand,
   });
 
@@ -115,8 +121,17 @@ class Product {
       price: json['price'] ?? '0',
       specialPrice: json['specialprice'],
       discount: json['discount'],
-      category: json['category'] ?? 'General',
+      categories: json['categories'] != null
+          ? json['categories']
+                .toString()
+                .split(', ')
+                .map((s) => s.trim())
+                .toList()
+          : [json['category'] ?? 'General'],
       brand: json['brand'],
     );
   }
+
+  // Backward compatibility getter
+  String get category => primaryCategory;
 }
