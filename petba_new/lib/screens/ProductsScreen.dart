@@ -67,6 +67,7 @@ class _ProductsPageState extends State<ProductsPage> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final List<dynamic> productsJson = data['latestproduct'];
+        print('Products response: ${response.body}');
 
         setState(() {
           _allProducts = productsJson.map((json) => Product.fromJson(json)).toList();

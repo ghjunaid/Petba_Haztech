@@ -1064,8 +1064,7 @@ class _HomePageState extends State<HomePage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                            builder: (context) => ProductsPage()),
+                        MaterialPageRoute(builder: (context) => ProductsPage()),
                       );
                     },
                     child: Text(

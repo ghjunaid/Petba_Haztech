@@ -173,7 +173,7 @@ class ProductController
                     'p.image', 'p.price', 'sp.price', 'd.price', 'cd.name', 'm.name'
                 ])
                 ->orderByDesc('p.product_id')
-                ->limit(10)
+                // ->limit(10)
                 ->get();
 
             return response()->json(['latestproduct' => $latestProducts]);
