@@ -26,7 +26,7 @@ class DashboardController
             $banner = $this->imageBanner();
             $latest = $this->latestProduct();
             $cart = $this->cartTotal($customer_id);
-            $featured = $this->featuredProducts($request);
+            $featured = $this->featuredProducts();
             $discount = $this->discountPrice();
             $rescueHome = $this->rescueListHome($city_id);
             $adoption = $this->adoptionListHome($city_id);
@@ -128,68 +128,83 @@ class DashboardController
         }
     }
 
-    public function featuredProducts(Request $request)
+    public function featuredProducts()
     {
-		// Get product IDs from request and convert to array of integers
-		$ids = $request->input('product', []);
-		if (is_string($ids)) {
-			$ids = explode(',', $ids);
-		}
-		$ids = array_map('intval', $ids);
+        // Query oc_module table for featured module settings
+        $module = DB::table('oc_module')
+            ->where('code', 'featured')
+            ->first();
 
-		try {
-			$query = DB::table('oc_product as p')
-				->join('oc_product_description as pd', 'p.product_id', '=', 'pd.product_id')
-				->join('oc_product_to_category as ptc', 'p.product_id', '=', 'ptc.product_id')
-				->join('oc_category_description as cate', 'ptc.category_id', '=', 'cate.category_id')
-				->join('oc_manufacturer', 'p.manufacturer_id', '=', 'oc_manufacturer.manufacturer_id')
+        // Check if module exists
+        if (!$module) {
+            return response()->json(['error' => 'Featured module not found'], 404);
+        }
 
-				// Subquery for discount prices
-				->leftJoin(DB::raw('(
-					SELECT product_id, MIN(price) AS discount
-					FROM oc_product_discount
-					WHERE DATE(date_start) <= CURDATE() AND DATE(date_end) >= CURDATE()
-					GROUP BY product_id
-				) as dis'), 'p.product_id', '=', 'dis.product_id')
+        // Decode JSON settings
+        $settings = json_decode($module->setting, true);
 
-				// Subquery for special prices
-				->leftJoin(DB::raw('(
-					SELECT product_id, MIN(price) AS specialprice
-					FROM oc_product_special
-					WHERE DATE(date_start) <= CURDATE() AND DATE(date_end) >= CURDATE()
-					GROUP BY product_id
-				) as special'), 'p.product_id', '=', 'special.product_id')
+        // Check if settings contain product array
+        if (!isset($settings['product']) || !is_array($settings['product'])) {
+            return response()->json(['error' => 'No featured products configured'], 400);
+        }
 
-				->where('p.status', 1)
-				->where('p.quantity', '>', 0)
-				->select(
-					'p.product_id',
-					'p.model',
-					'pd.name',
-					'pd.description',
-					'p.quantity',
-					'p.image',
-					'p.price',
-					'special.specialprice',
-					'dis.discount',
-					'cate.name as category',
-					'oc_manufacturer.name as brand'
-				)
-				->orderBy('p.product_id')
-				->limit(5);
+        // Get product IDs and convert to integers
+        $ids = array_map('intval', $settings['product']);
 
-			// If specific product IDs are provided, filter by them; otherwise, return default selection
-			if (!empty($ids)) {
-				$query->whereIn('p.product_id', $ids);
-			}
+        // Return error if no products specified
+        if (empty($ids)) {
+            return response()->json(['error' => 'No featured products specified'], 400);
+        }
 
-			$products = $query->get();
+        try {
+            $products = DB::table('oc_product as p')
+                ->join('oc_product_description as pd', 'p.product_id', '=', 'pd.product_id')
+                ->join('oc_product_to_category as ptc', 'p.product_id', '=', 'ptc.product_id')
+                ->join('oc_category_description as cate', 'ptc.category_id', '=', 'cate.category_id')
+                ->join('oc_manufacturer', 'p.manufacturer_id', '=', 'oc_manufacturer.manufacturer_id')
 
-			return response()->json(['featuredproducts' => $products]);
+                // Subquery for discount prices
+                ->leftJoin(DB::raw('(
+                    SELECT product_id, MIN(price) AS discount
+                    FROM oc_product_discount
+                    WHERE DATE(date_start) <= CURDATE() AND DATE(date_end) >= CURDATE()
+                    GROUP BY product_id
+                ) as dis'), 'p.product_id', '=', 'dis.product_id')
 
-		} catch (\Exception $e) {
-			return response()->json(['error' => ['text' => $e->getMessage()]], 500);
-		}
+                // Subquery for special prices
+                ->leftJoin(DB::raw('(
+                    SELECT product_id, MIN(price) AS specialprice
+                    FROM oc_product_special
+                    WHERE DATE(date_start) <= CURDATE() AND DATE(date_end) >= CURDATE()
+                    GROUP BY product_id
+                ) as special'), 'p.product_id', '=', 'special.product_id')
+
+                ->whereIn('p.product_id', $ids)
+                ->where('p.status', 1)
+                ->where('p.quantity', '>', 0)
+                ->groupBy('p.product_id')
+                ->select(
+                    'p.product_id',
+                    'p.model',
+                    'pd.name',
+                    'pd.description',
+                    'p.quantity',
+                    'p.image',
+                    'p.price',
+                    'special.specialprice',
+                    'dis.discount',
+                    'cate.name as category',
+                    'oc_manufacturer.name as brand'
+                )
+                ->orderBy('p.product_id')
+                ->limit(5)
+                ->get();
+
+            return response()->json(['featuredproducts' => $products]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => ['text' => $e->getMessage()]], 500);
+        }
     }
 
 
