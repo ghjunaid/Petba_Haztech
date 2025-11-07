@@ -144,9 +144,14 @@ class CartController
                 if (!$existingProduct) {
                     // Insert the product into the cart if not already added
                     DB::table('oc_cart')->insert([
+                        'api_id' => 1, // Assuming default API ID
                         'customer_id' => $id,
+                        'session_id' => '', // Empty session ID
                         'product_id' => $product_id,
-                        'quantity' => $qty
+                        'recurring_id' => 0, // No recurring
+                        'option' => '', // No options
+                        'quantity' => $qty,
+                        'date_added' => now()
                     ]);
 
                     // Fetch cart total and return success message
