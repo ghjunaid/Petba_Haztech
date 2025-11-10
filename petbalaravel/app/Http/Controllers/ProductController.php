@@ -392,4 +392,87 @@ class ProductController
     }
 }
 
+    /**
+     * Get products filtered by filter IDs
+     */
+    public function filteredProducts(Request $request)
+    {
+        try {
+            $data = $request->json()->all();
+            $filterIds = $data['filter_ids'] ?? [];
+
+            if (empty($filterIds) || !is_array($filterIds)) {
+                return response()->json(['error' => 'filter_ids array is required'], 400);
+            }
+
+            // Get product IDs that have any of the selected filters
+            $productIds = DB::table('oc_product_filter')
+                ->whereIn('filter_id', $filterIds)
+                ->distinct()
+                ->pluck('product_id');
+
+            if ($productIds->isEmpty()) {
+                return response()->json(['products' => []]);
+            }
+
+            // Get products with same structure as latestProduct
+            $filteredProducts = DB::table('oc_product as p')
+                ->select(
+                    'p.product_id',
+                    'p.model',
+                    'pd.name',
+                    'pd.description',
+                    'p.quantity',
+                    'p.image',
+                    'p.price',
+                    'sp.price as specialprice',
+                    'd.price as discount',
+                    DB::raw('GROUP_CONCAT(DISTINCT cd.name SEPARATOR ", ") as categories'),
+                    'm.name as brand'
+                )
+                ->leftjoin('oc_product_description as pd', function ($join) {
+                    $join->on('p.product_id', '=', 'pd.product_id')
+                        ->where('pd.language_id', 1);
+                })
+                ->leftjoin('oc_product_to_category as pc', 'p.product_id', '=', 'pc.product_id')
+                ->leftjoin('oc_category as c', function ($join) {
+                    $join->on('pc.category_id', '=', 'c.category_id')
+                        ->where('c.status', '=', 1);
+                })
+                ->leftjoin('oc_category_description as cd', function ($join) {
+                    $join->on('c.category_id', '=', 'cd.category_id')
+                        ->where('cd.language_id', 1);
+                })
+                ->leftjoin('oc_manufacturer as m', 'p.manufacturer_id', '=', 'm.manufacturer_id')
+                ->leftJoin(DB::raw('(
+                    SELECT product_id, price
+                    FROM oc_product_special
+                    WHERE CURDATE() BETWEEN date_start AND date_end
+                    ORDER BY priority ASC, price ASC
+                ) as sp'), 'p.product_id', '=', 'sp.product_id')
+                ->leftJoin(DB::raw('(
+                    SELECT product_id, price
+                    FROM oc_product_discount
+                    WHERE CURDATE() BETWEEN date_start AND date_end
+                    ORDER BY priority ASC, price ASC
+                ) as d'), 'p.product_id', '=', 'd.product_id')
+                ->whereIn('p.product_id', $productIds)
+                ->where('p.status', 1)
+                ->groupBy([
+                    'p.product_id', 'p.model', 'pd.name', 'pd.description', 'p.quantity',
+                    'p.image', 'p.price', 'sp.price', 'd.price', 'm.name'
+                ])
+                ->orderByDesc('p.product_id')
+                ->get();
+
+            return response()->json(['products' => $filteredProducts]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch filtered products',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }

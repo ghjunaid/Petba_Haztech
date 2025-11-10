@@ -92,6 +92,7 @@ Route::post('featuredproducts', [ProductController::class, 'featuredproducts']);
 Route::post('featuredproductslist', [ProductController::class, 'featuredproductsList']);
 Route::get('special-product-list', [ProductController::class, 'specialProductList']);
 Route::post('getlowerhigher', [ProductController::class, 'getlowerhigher']);
+Route::post('filtered-products', [ProductController::class, 'filteredProducts']);
 
 Route::post('addpet', [PetController::class, 'addPet']);  
 Route::post('listpet', [PetController::class, 'listPet']);
@@ -138,6 +139,7 @@ Route::delete('deleterescuepet', [RescuePetController::class, 'deleteRescuePet']
 Route::get('colors', [ColorController::class, 'getColors']);
 
 Route::post('filter', [FilterController::class, 'filter']);
+Route::post('filter-by-group', [FilterController::class, 'getFiltersByGroup']);
 Route::get('adoption-filter', [FilterController::class, 'adoptionFilter']);
 Route::post('get-filters', [FilterController::class, 'getFilters']); 
 Route::get('rescue-filter', [FilterController::class, 'rescueFilter']);

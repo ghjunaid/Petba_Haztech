@@ -10,6 +10,8 @@ import '../providers/Config.dart';
 import '../services/user_data_service.dart';
 import 'CartPage.dart';
 
+
+
 class ProductsPage extends StatefulWidget {
   const ProductsPage({Key? key}) : super(key: key);
 
@@ -23,6 +25,18 @@ class _ProductsPageState extends State<ProductsPage> {
   List<Product> _allProducts = [];
   bool _isLoading = true;
   String _error = '';
+
+  // Filter state
+  List<Filter> _selectedFilters = [];
+
+  // Map category names to filter_group_id
+  final Map<String, int> _categoryToFilterGroupId = {
+    'Food': 2,
+    'Toys': 3,
+    'Accessories': 4,
+    'Health': 5,
+    'Grooming': 6,
+  };
 
   final List<String> _categories = [
     'All',
@@ -92,48 +106,26 @@ class _ProductsPageState extends State<ProductsPage> {
     }
   }
 
-  // Your existing filtering and sorting logic
   List<Product> get _filteredProducts {
-    List<Product> filtered = _selectedCategory == 'All'
+    var filtered = _selectedCategory == 'All'
         ? _allProducts
-        : _allProducts
-              .where((p) => p.categories.contains(_selectedCategory))
-              .toList();
+        : _allProducts.where((p) => p.categories.contains(_selectedCategory)).toList();
 
     switch (_sortBy) {
-      case 'Price: Low to High':
-        filtered.sort((a, b) => a.price.compareTo(b.price));
-        break;
-      case 'Price: High to Low':
-        filtered.sort((a, b) => b.price.compareTo(a.price));
-        break;
-      case 'Rating':
-        filtered.sort((a, b) => b.rating.compareTo(a.rating));
-        break;
-      case 'Newest':
-        filtered.sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
-        break;
-      default:
-        // Sort by quantity or product_id as default
-        filtered.sort((a, b) => b.quantity.compareTo(a.quantity));
+      case 'Price: Low to High': filtered.sort((a, b) => a.price.compareTo(b.price)); break;
+      case 'Price: High to Low': filtered.sort((a, b) => b.price.compareTo(a.price)); break;
+      case 'Rating': filtered.sort((a, b) => b.rating.compareTo(a.rating)); break;
+      case 'Newest': filtered.sort((a, b) => b.dateAdded.compareTo(a.dateAdded)); break;
+      default: filtered.sort((a, b) => b.quantity.compareTo(a.quantity));
     }
-
     return filtered;
   }
 
-  // Handler for sort changes
-  void _handleSortChange(String newSortBy) {
-    setState(() {
-      _sortBy = newSortBy;
-    });
-  }
-
-  // Method to show the sort bottom sheet
   void _showSortBottomSheet() {
     SortBottomSheet.show(
       context: context,
       currentSortBy: _sortBy,
-      onSortChanged: _handleSortChange,
+      onSortChanged: (newSortBy) => setState(() => _sortBy = newSortBy),
       sortOptions: _sortOptions,
     );
   }
@@ -141,124 +133,26 @@ class _ProductsPageState extends State<ProductsPage> {
   Future<void> _navigateToCart() async {
     try {
       final authData = await UserDataService.getAuthData();
-
-      if (authData != null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CartPage(
-              customerId: authData['customer_id'].toString(),
-              email: authData['email'],
-              token: authData['token'],
-            ),
-          ),
-        );
-      } else {
-        // Show login required message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Please login to view your cart'),
-            backgroundColor: Colors.red,
-            action: SnackBarAction(
-              label: 'Login',
-              textColor: Colors.white,
-              onPressed: () {
-                // Navigate to login page - replace with your login navigation
-                // Navigator.pushNamed(context, '/login');
-              },
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error accessing cart: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  // Also add this method for adding to cart functionality
-  Future<void> _addToCart(Product product) async {
-    try {
-      final authData = await UserDataService.getAuthData();
-
       if (authData == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Please login to add items to cart'),
-            backgroundColor: Colors.red,
-          ),
+          const SnackBar(content: Text('Please login to view your cart'), backgroundColor: Colors.red),
         );
         return;
       }
-
-      final requestBody = {
-        "userData": {
-          "customer_id": authData['customer_id'].toString(),
-          "email": authData['email'],
-          "token": authData['token'],
-          "product_id": product.productId,
-          "qty": 1, // Default quantity
-        },
-      };
-
-      final response = await http.post(
-        Uri.parse('$apiurl/api/addcart'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: json.encode(requestBody),
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        if (data['added'] != null && data['added'] == "added to cart") {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${product.name} added to cart!'),
-              backgroundColor: Colors.green,
-              action: SnackBarAction(
-                label: 'View Cart',
-                textColor: Colors.white,
-                onPressed: () {
-                  _navigateToCart();
-                },
-              ),
-            ),
-          );
-        } else if (data['added'] != null &&
-            data['added'] == "product already added to cart") {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${product.name} is already in your cart'),
-              backgroundColor: Colors.orange,
-              action: SnackBarAction(
-                label: 'View Cart',
-                textColor: Colors.white,
-                onPressed: () {
-                  _navigateToCart();
-                },
-              ),
-            ),
-          );
-        }
-      } else {
-        throw Exception('Failed to add to cart');
-      }
+      Navigator.push(context, MaterialPageRoute(
+        builder: (_) => CartPage(
+          customerId: authData['customer_id'].toString(),
+          email: authData['email'],
+          token: authData['token'],
+        ),
+      ));
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error adding to cart: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -301,11 +195,17 @@ class _ProductsPageState extends State<ProductsPage> {
                     itemBuilder: (context, index) {
                       final category = _categories[index];
                       final isSelected = category == _selectedCategory;
+                      final hasFilterGroup = _categoryToFilterGroupId.containsKey(category);
                       return GestureDetector(
                         onTap: () {
                           setState(() {
                             _selectedCategory = category;
                           });
+                          // If category has a filter group, show filter options
+                          if (hasFilterGroup) {
+                            final filterGroupId = _categoryToFilterGroupId[category]!;
+                            _showProductFilterOptions(filterGroupId);
+                          }
                         },
                         child: Container(
                           margin: const EdgeInsets.only(
@@ -377,10 +277,7 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 
   Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (_error.isNotEmpty) {
       return Center(
         child: Column(
@@ -388,53 +285,32 @@ class _ProductsPageState extends State<ProductsPage> {
           children: [
             Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
-            Text(
-              _error,
-              style: TextStyle(color: Colors.grey.shade400, fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
+            Text(_error, style: TextStyle(color: Colors.grey.shade400, fontSize: 16), textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _fetchProducts,
-              child: const Text('Retry'),
-            ),
+            ElevatedButton(onPressed: _fetchProducts, child: const Text('Retry')),
           ],
         ),
       );
     }
-
     if (_filteredProducts.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.inventory_2_outlined,
-              size: 64,
-              color: Colors.grey.shade400,
-            ),
+            Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
-            Text(
-              'No products found',
-              style: TextStyle(color: Colors.grey.shade400, fontSize: 16),
-            ),
+            Text('No products found', style: TextStyle(color: Colors.grey.shade400, fontSize: 16)),
           ],
         ),
       );
     }
-
     return GridView.builder(
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.65,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
+        crossAxisCount: 2, childAspectRatio: 0.65, crossAxisSpacing: 12, mainAxisSpacing: 12,
       ),
       itemCount: _filteredProducts.length,
-      itemBuilder: (context, index) {
-        return _buildProductCard(_filteredProducts[index]);
-      },
+      itemBuilder: (_, index) => _buildProductCard(_filteredProducts[index]),
     );
   }
 
@@ -672,23 +548,14 @@ class _ProductsPageState extends State<ProductsPage> {
     );
   }
 
-  // All other existing methods remain unchanged...
   IconData _getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
-      case 'food':
-      case 'cats':
-      case 'dogs':
-        return Icons.restaurant;
-      case 'toys':
-        return Icons.sports_soccer;
-      case 'accessories':
-        return Icons.shopping_bag;
-      case 'health':
-        return Icons.medical_services;
-      case 'grooming':
-        return Icons.content_cut;
-      default:
-        return Icons.pets;
+      case 'food': case 'cats': case 'dogs': return Icons.restaurant;
+      case 'toys': return Icons.sports_soccer;
+      case 'accessories': return Icons.shopping_bag;
+      case 'health': return Icons.medical_services;
+      case 'grooming': return Icons.content_cut;
+      default: return Icons.pets;
     }
   }
 
@@ -696,64 +563,189 @@ class _ProductsPageState extends State<ProductsPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Search Products',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Search Products', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search for products...',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search for products...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onChanged: (value) {
-                    // Implement search logic here
-                  },
-                ),
-                const SizedBox(height: 20),
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-      },
-    );
-  }
-
-  void _showProductDetails(Product product) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ProductDetailPage(
-          productId: product.productId,
-          productName: product.name,
         ),
       ),
     );
   }
 
-  String _stripHtmlTags(String htmlText) {
-    RegExp exp = RegExp(r"<[^>]*>", multiLine: true, caseSensitive: true);
-    return htmlText
-        .replaceAll(exp, '')
-        .replaceAll('&quot;', '"')
-        .replaceAll('&lt;', '<')
-        .replaceAll('&gt;', '>')
-        .replaceAll('&amp;', '&');
+  void _showProductDetails(Product product) {
+    Navigator.push(context, MaterialPageRoute(
+      builder: (_) => ProductDetailPage(productId: product.productId, productName: product.name),
+    ));
+  }
+
+  Future<void> _showProductFilterOptions(int filterGroupId) async {
+    if (!mounted) return;
+    showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+
+    try {
+      final response = await http.post(
+        Uri.parse('$apiurl/api/filter-by-group'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'filter_group_id': filterGroupId}),
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context);
+
+      if (response.statusCode != 200) {
+        final error = json.decode(response.body)['error'] ?? 'Failed to load filters';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $error'), backgroundColor: Colors.red));
+        return;
+      }
+
+      final data = json.decode(response.body);
+      if (data.containsKey('error') || data['filter_group'] == null || data['filters'] == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invalid response'), backgroundColor: Colors.red));
+        return;
+      }
+
+      final filtersList = (data['filters'] as List).map((json) {
+        final filter = Filter.fromJson(json);
+        final existing = _selectedFilters.firstWhere((f) => f.filterId == filter.filterId, orElse: () => Filter(filterId: -1, name: '', filterGroupId: -1));
+        if (existing.filterId != -1) filter.isSelected = existing.isSelected;
+        return filter;
+      }).toList();
+
+      if (filtersList.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No filters found'), backgroundColor: Colors.orange));
+        return;
+      }
+
+      if (!mounted) return;
+      _showFilterBottomSheet(data['filter_group'], filtersList, filterGroupId);
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+      }
+    }
+  }
+
+  void _showFilterBottomSheet(Map<String, dynamic> filterGroup, List<Filter> filters, int filterGroupId) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => StatefulBuilder(
+        builder: (_, setModalState) => Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFFE5E7EB)))),
+                child: Row(
+                  children: [
+                    IconButton(icon: const Icon(Icons.arrow_back, color: Colors.black), onPressed: () => Navigator.pop(context)),
+                    Expanded(child: Text(filterGroup['name'] ?? 'Filters', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600))),
+                    TextButton(
+                      onPressed: () => setModalState(() => filters.forEach((f) => f.isSelected = false)),
+                      child: const Text('Clear Filters', style: TextStyle(color: Color(0xFF2563EB), fontSize: 14)),
+                    ),
+                  ],
+                ),
+              ),
+              // Filters
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: filters.map((filter) => CheckboxListTile(
+                    title: Text(filter.name),
+                    value: filter.isSelected,
+                    onChanged: (value) => setModalState(() => filter.isSelected = value ?? false),
+                    activeColor: const Color(0xFF2563EB),
+                  )).toList(),
+                ),
+              ),
+              // Bottom bar
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFE5E7EB)))),
+                child: Row(
+                  children: [
+                    Text('${filters.where((f) => f.isSelected).length} selected', style: const TextStyle(fontSize: 14)),
+                    const Spacer(),
+                    SizedBox(
+                      width: 120,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedFilters.removeWhere((f) => f.filterGroupId == filterGroupId);
+                            _selectedFilters.addAll(filters.where((f) => f.isSelected));
+                          });
+                          Navigator.pop(context);
+                          _applyFilters();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2563EB),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        child: const Text('Apply', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _applyFilters() async {
+    if (_selectedFilters.isEmpty) {
+      _fetchProducts();
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final response = await http.post(
+        Uri.parse('$apiurl/api/filtered-products'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'filter_ids': _selectedFilters.map((f) => f.filterId).toList()}),
+      );
+
+      if (response.statusCode == 200) {
+        final productsJson = (json.decode(response.body)['products'] as List?) ?? [];
+        final productMap = <int, Product>{};
+        for (var json in productsJson) {
+          final product = Product.fromJson(json);
+          productMap[product.productId] = product;
+        }
+        setState(() {
+          _allProducts = productMap.values.toList();
+          _isLoading = false;
+        });
+      } else {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
   }
 }

@@ -135,3 +135,25 @@ class Product {
   // Backward compatibility getter
   String get category => primaryCategory;
 }
+
+class Filter {
+  final int filterId;
+  final String name;
+  final int filterGroupId;
+  bool isSelected;
+
+  Filter({
+    required this.filterId,
+    required this.name,
+    required this.filterGroupId,
+    this.isSelected = false,
+  });
+
+  factory Filter.fromJson(Map<String, dynamic> json) {
+    return Filter(
+      filterId: json['filter_id'],
+      name: json['name'],
+      filterGroupId: json['filter_group_id'],
+    );
+  }
+}

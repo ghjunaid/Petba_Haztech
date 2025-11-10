@@ -260,4 +260,82 @@ class FilterController
         }
     }
 
+    /**
+     * Get filters for a specific filter group
+     * Accepts filter_group_id and returns all filters in that group
+     */
+    public function getFiltersByGroup(Request $request)
+    {
+        try {
+            $data = $request->json()->all();
+            $filterGroupId = $data['filter_group_id'] ?? null;
+
+            if (!$filterGroupId) {
+                return response()->json([
+                    'error' => 'filter_group_id is required'
+                ], 400);
+            }
+
+            // Get filter group name (assuming language_id = 1 for English)
+            $filterGroup = DB::table('oc_filter_group_description')
+                ->where('filter_group_id', $filterGroupId)
+                ->where('language_id', 1)
+                ->first();
+
+            if (!$filterGroup) {
+                // Try to find without language_id restriction to see if group exists
+                $anyLanguageGroup = DB::table('oc_filter_group_description')
+                    ->where('filter_group_id', $filterGroupId)
+                    ->first();
+                
+                if ($anyLanguageGroup) {
+                    return response()->json([
+                        'error' => 'Filter group found but not for language_id = 1. Available language_id: ' . $anyLanguageGroup->language_id
+                    ], 404);
+                }
+                
+                // Check if filter group exists in oc_filter_group table
+                $groupExists = DB::table('oc_filter_group')
+                    ->where('filter_group_id', $filterGroupId)
+                    ->exists();
+                
+                if (!$groupExists) {
+                    return response()->json([
+                        'error' => 'Filter group ID ' . $filterGroupId . ' does not exist in database'
+                    ], 404);
+                }
+                
+                return response()->json([
+                    'error' => 'Filter group ID ' . $filterGroupId . ' exists but has no description for language_id = 1'
+                ], 404);
+            }
+
+            // Get all filters for this filter group
+            $filters = DB::table('oc_filter_description')
+                ->where('filter_group_id', $filterGroupId)
+                ->where('language_id', 1)
+                ->orderBy('filter_id', 'asc')
+                ->get();
+
+            return response()->json([
+                'filter_group' => [
+                    'filter_group_id' => $filterGroup->filter_group_id,
+                    'name' => $filterGroup->name,
+                ],
+                'filters' => $filters->map(function ($filter) {
+                    return [
+                        'filter_id' => $filter->filter_id,
+                        'filter_group_id' => $filter->filter_group_id,
+                        'name' => $filter->name,
+                    ];
+                }),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch filters',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }
