@@ -206,7 +206,8 @@ class _HomePageState extends State<HomePage> {
 
       if (requestBody == null) {
         setState(() {
-          _dashboardError = 'User data not found. Please login again.';
+          _dashboardError =
+              'User data not found. Please login again or select a location.';
           _isLoadingDashboard = false;
         });
         return;
@@ -220,6 +221,7 @@ class _HomePageState extends State<HomePage> {
         },
         body: json.encode(requestBody),
       );
+      print('dashboard request: ${json.encode(requestBody)}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
@@ -288,8 +290,6 @@ class _HomePageState extends State<HomePage> {
           _isLoadingDashboard = false;
           _rescuePets = rescuePets;
         });
-        // Refresh rescue pets using user's current location (non-blocking)
-        _fetchNearbyRescues();
       } else if (response.statusCode == 401) {
         setState(() {
           _dashboardError = 'Session expired. Please login again.';
@@ -354,7 +354,8 @@ class _HomePageState extends State<HomePage> {
         currentLatitude = pos.latitude;
         currentLongitude = pos.longitude;
       });
-      await _fetchNearbyRescues();
+      // Refresh dashboard data with the correct location
+      await _fetchDashboardData();
     } catch (e) {
       print('Error initializing location: $e');
     }
@@ -836,10 +837,17 @@ class _HomePageState extends State<HomePage> {
             // Location selector
             LocationPickerWidget(
               currentLocation: selectedLocation,
-              onLocationSelected: (String location) {
+              onLocationSelected: (String location, int? cityId) async {
                 setState(() {
                   selectedLocation = location;
                 });
+                // Save city_id if provided
+                if (cityId != null) {
+                  await UserDataService.setCityId(cityId);
+                  print('City ID saved from HomePage: $cityId');
+                }
+                // Refresh dashboard data with new location
+                await _fetchDashboardData();
               },
             ),
             SizedBox(height: 20),
@@ -1025,7 +1033,7 @@ class _HomePageState extends State<HomePage> {
                   ? _buildRescuePetsList()
                   : Center(
                       child: Text(
-                        "no pets for rescue in this city",
+                        "No pets in your region",
                         style: TextStyle(
                           color: AppColors.grey,
                           fontSize: 18,

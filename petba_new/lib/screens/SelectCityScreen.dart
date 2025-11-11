@@ -3,12 +3,14 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:petba_new/providers/Config.dart';
 import 'package:petba_new/services/user_data_service.dart';
+import 'package:petba_new/services/location_service.dart';
 import 'package:petba_new/screens/HomePage.dart';
 
 class CitySelectionPage extends StatefulWidget {
   final bool isFromLogin; // To determine if coming from login or settings
 
-  const CitySelectionPage({Key? key, this.isFromLogin = true}) : super(key: key);
+  const CitySelectionPage({Key? key, this.isFromLogin = true})
+    : super(key: key);
 
   @override
   _CitySelectionPageState createState() => _CitySelectionPageState();
@@ -68,10 +70,7 @@ class _CitySelectionPageState extends State<CitySelectionPage> {
       final response = await http.post(
         Uri.parse('$apiurl/api/search-city'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'off': 0,
-          'search': searchText,
-        }),
+        body: json.encode({'off': 0, 'search': searchText}),
       );
 
       if (response.statusCode == 200) {
@@ -95,7 +94,9 @@ class _CitySelectionPageState extends State<CitySelectionPage> {
           _cities = citiesList;
         });
       } else {
-        throw Exception('Failed to load cities - Status: ${response.statusCode}');
+        throw Exception(
+          'Failed to load cities - Status: ${response.statusCode}',
+        );
       }
     } catch (e) {
       _showMessage('Failed to load cities: $e', isError: true);
@@ -118,9 +119,34 @@ class _CitySelectionPageState extends State<CitySelectionPage> {
 
     try {
       // Save city ID in user data
-      bool success = await UserDataService.setCityId(int.parse(_selectedCityId!));
+      bool success = await UserDataService.setCityId(
+        int.parse(_selectedCityId!),
+      );
 
       if (success) {
+        // Get coordinates for the selected city and save them
+        try {
+          LocationResult result =
+              await LocationService.getCoordinatesFromAddress(
+                _selectedCityName!,
+              );
+          if (result.success &&
+              result.latitude != null &&
+              result.longitude != null) {
+            await UserDataService.setCoordinates(
+              result.latitude!,
+              result.longitude!,
+            );
+            print(
+              'Coordinates saved for city: $_selectedCityName (${result.latitude}, ${result.longitude})',
+            );
+          } else {
+            print('Could not get coordinates for city: $_selectedCityName');
+          }
+        } catch (e) {
+          print('Error getting coordinates for city: $e');
+        }
+
         _showMessage('City selected successfully!', isError: false);
 
         // Navigate to HomePage after successful city selection
@@ -191,7 +217,9 @@ class _CitySelectionPageState extends State<CitySelectionPage> {
                     ),
                     SizedBox(height: 24),
                     Text(
-                      widget.isFromLogin ? 'Welcome to Petba!' : 'Change Location',
+                      widget.isFromLogin
+                          ? 'Welcome to Petba!'
+                          : 'Change Location',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 28,
@@ -203,10 +231,7 @@ class _CitySelectionPageState extends State<CitySelectionPage> {
                       widget.isFromLogin
                           ? 'Please search and select your city to get started'
                           : 'Search and select a different city',
-                      style: TextStyle(
-                        color: Colors.grey[400],
-                        fontSize: 16,
-                      ),
+                      style: TextStyle(color: Colors.grey[400], fontSize: 16),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -237,7 +262,8 @@ class _CitySelectionPageState extends State<CitySelectionPage> {
                         SizedBox(height: 8),
                         _buildTextField(
                           controller: _cityController,
-                          hintText: 'Type to search for your city (e.g., Mumbai, Delhi)',
+                          hintText:
+                              'Type to search for your city (e.g., Mumbai, Delhi)',
                           onChanged: (value) {
                             if (value.length >= 1) {
                               _searchCities(value);
@@ -303,28 +329,39 @@ class _CitySelectionPageState extends State<CitySelectionPage> {
                                     decoration: BoxDecoration(
                                       color: Color(0xFF1a1a1a),
                                       borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                                      border: Border.all(
+                                        color: Colors.grey.withOpacity(0.3),
+                                      ),
                                     ),
                                     child: ListView.builder(
                                       itemCount: _cities.length,
                                       itemBuilder: (context, index) {
                                         final city = _cities[index];
-                                        final isSelected = _selectedCityId == city['city_id'].toString();
+                                        final isSelected =
+                                            _selectedCityId ==
+                                            city['city_id'].toString();
 
                                         return InkWell(
                                           onTap: () {
                                             setState(() {
-                                              _selectedCityId = city['city_id'].toString();
-                                              _selectedCityName = city['city_name'].toString();
+                                              _selectedCityId = city['city_id']
+                                                  .toString();
+                                              _selectedCityName =
+                                                  city['city_name'].toString();
                                             });
                                           },
                                           child: Container(
                                             padding: EdgeInsets.all(16),
                                             decoration: BoxDecoration(
-                                              color: isSelected ? Color(0xFFFF6B6B).withOpacity(0.1) : null,
+                                              color: isSelected
+                                                  ? Color(
+                                                      0xFFFF6B6B,
+                                                    ).withOpacity(0.1)
+                                                  : null,
                                               border: Border(
                                                 bottom: BorderSide(
-                                                  color: Colors.grey.withOpacity(0.2),
+                                                  color: Colors.grey
+                                                      .withOpacity(0.2),
                                                   width: 0.5,
                                                 ),
                                               ),
@@ -333,21 +370,28 @@ class _CitySelectionPageState extends State<CitySelectionPage> {
                                               children: [
                                                 Expanded(
                                                   child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
                                                     children: [
                                                       Text(
-                                                        city['city_name'].toString(),
+                                                        city['city_name']
+                                                            .toString(),
                                                         style: TextStyle(
                                                           color: Colors.white,
                                                           fontSize: 16,
-                                                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                                          fontWeight: isSelected
+                                                              ? FontWeight.w600
+                                                              : FontWeight
+                                                                    .normal,
                                                         ),
                                                       ),
                                                       SizedBox(height: 4),
                                                       Text(
                                                         '${city['district']}, ${city['state']}',
                                                         style: TextStyle(
-                                                          color: Colors.grey[400],
+                                                          color:
+                                                              Colors.grey[400],
                                                           fontSize: 14,
                                                         ),
                                                       ),
@@ -372,7 +416,9 @@ class _CitySelectionPageState extends State<CitySelectionPage> {
                             ),
                           ),
 
-                        if (!_isLoadingCities && _cities.isEmpty && _cityController.text.isNotEmpty)
+                        if (!_isLoadingCities &&
+                            _cities.isEmpty &&
+                            _cityController.text.isNotEmpty)
                           Container(
                             height: 60,
                             child: Center(
@@ -390,7 +436,10 @@ class _CitySelectionPageState extends State<CitySelectionPage> {
                           width: double.infinity,
                           height: 56,
                           child: ElevatedButton(
-                            onPressed: (_isSubmitting || _selectedCityId == null) ? null : _saveCityAndContinue,
+                            onPressed:
+                                (_isSubmitting || _selectedCityId == null)
+                                ? null
+                                : _saveCityAndContinue,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Color(0xFFFF6B6B),
                               shape: RoundedRectangleBorder(
@@ -401,31 +450,33 @@ class _CitySelectionPageState extends State<CitySelectionPage> {
                             ),
                             child: _isSubmitting
                                 ? Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                                SizedBox(width: 10),
-                                Text(
-                                  'Please wait...',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ],
-                            )
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                      SizedBox(width: 10),
+                                      Text(
+                                        'Please wait...',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                    ],
+                                  )
                                 : Text(
-                              widget.isFromLogin ? 'Continue to Petba' : 'Save Changes',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                                    widget.isFromLogin
+                                        ? 'Continue to Petba'
+                                        : 'Save Changes',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
                         ),
 
@@ -504,16 +555,16 @@ class _CitySelectionPageState extends State<CitySelectionPage> {
         contentPadding: EdgeInsets.all(16),
         suffixIcon: _cityController.text.isNotEmpty
             ? IconButton(
-          onPressed: () {
-            _cityController.clear();
-            setState(() {
-              _cities = [];
-              _selectedCityId = null;
-              _selectedCityName = null;
-            });
-          },
-          icon: Icon(Icons.clear, color: Colors.grey),
-        )
+                onPressed: () {
+                  _cityController.clear();
+                  setState(() {
+                    _cities = [];
+                    _selectedCityId = null;
+                    _selectedCityName = null;
+                  });
+                },
+                icon: Icon(Icons.clear, color: Colors.grey),
+              )
             : null,
       ),
     );

@@ -5,6 +5,8 @@ class UserDataService {
   static const String USER_DATA_KEY = 'userData';
   static const String IS_LOGGED_IN_KEY = 'isLoggedIn';
   static const String CITY_ID_KEY = 'cityId';
+  static const String LATITUDE_KEY = 'latitude';
+  static const String LONGITUDE_KEY = 'longitude';
   static const String REMEMBER_ME_KEY = 'rememberMe';
   static const String REMEMBER_ME_EMAIL_KEY = 'rememberMeEmail';
   static const String REMEMBER_ME_PASSWORD_KEY = 'rememberMePassword';
@@ -60,7 +62,6 @@ class UserDataService {
       return null;
     }
   }
-
 
   // Get customer ID only
   static Future<int?> getCustomerId() async {
@@ -222,18 +223,40 @@ class UserDataService {
   static Future<Map<String, dynamic>?> getHomePageData() async {
     try {
       final userData = await getUserData();
+      if (userData == null) {
+        return null;
+      }
+
+      final latitude = await getLatitude();
+      final longitude = await getLongitude();
       final cityId = await getCityId();
 
-      if (userData != null && cityId != null) {
+      // If we have coordinates, use them
+      if (latitude != null && longitude != null) {
+        return {
+          'latitude': latitude,
+          'longitude': longitude,
+          'userData': {
+            'customer_id': userData['customer_id'],
+            'email': userData['email'],
+            'token': userData['token'] ?? '',
+          },
+        };
+      }
+
+      // Fallback to cityId if coordinates aren't available
+      if (cityId != null) {
         return {
           'city_id': cityId,
           'userData': {
             'customer_id': userData['customer_id'],
             'email': userData['email'],
             'token': userData['token'] ?? '',
-          }
+          },
         };
       }
+
+      // Neither coordinates nor cityId available
       return null;
     } catch (e) {
       print('Error preparing homepage data: $e');
@@ -258,6 +281,56 @@ class UserDataService {
     }
   }
 
+  // Get latitude
+  static Future<double?> getLatitude() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final latitude = prefs.getDouble(LATITUDE_KEY);
+      return latitude;
+    } catch (e) {
+      print('Error getting latitude: $e');
+      return null;
+    }
+  }
+
+  // Get longitude
+  static Future<double?> getLongitude() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final longitude = prefs.getDouble(LONGITUDE_KEY);
+      return longitude;
+    } catch (e) {
+      print('Error getting longitude: $e');
+      return null;
+    }
+  }
+
+  // Set latitude and longitude
+  static Future<bool> setCoordinates(double latitude, double longitude) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble(LATITUDE_KEY, latitude);
+      await prefs.setDouble(LONGITUDE_KEY, longitude);
+      return true;
+    } catch (e) {
+      print('Error setting coordinates: $e');
+      return false;
+    }
+  }
+
+  // Clear latitude and longitude
+  static Future<bool> clearCoordinates() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(LATITUDE_KEY);
+      await prefs.remove(LONGITUDE_KEY);
+      return true;
+    } catch (e) {
+      print('Error clearing coordinates: $e');
+      return false;
+    }
+  }
+
   // Clear all user data (logout)
   static Future<bool> clearUserData() async {
     try {
@@ -265,6 +338,8 @@ class UserDataService {
       await prefs.remove(USER_DATA_KEY);
       await prefs.remove(IS_LOGGED_IN_KEY);
       await prefs.remove(CITY_ID_KEY);
+      await prefs.remove(LATITUDE_KEY);
+      await prefs.remove(LONGITUDE_KEY);
       return true;
     } catch (e) {
       print('Error clearing user data: $e');

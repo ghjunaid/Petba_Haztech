@@ -15,12 +15,13 @@ class DashboardController
 {
     public function dashboard(Request $request)
     {
-        $data = $request->json()->all();
-        $city_id = $data['city_id'];
-        $userData = $data['userData'];
-        $customer_id = $userData['customer_id'];
-        $email = $userData['email'];
-        $token = $userData['token'];
+        $latitude = $request->input('latitude');
+        $longitude = $request->input('longitude');
+        $city_id = $request->input('city_id');
+        $userData = $request->input('userData', []);
+        $customer_id = $userData['customer_id'] ?? null;
+        $email = $userData['email'] ?? null;
+        $token = $userData['token'] ?? null;
 
         try {
             $banner = $this->imageBanner();
@@ -28,8 +29,8 @@ class DashboardController
             $cart = $this->cartTotal($customer_id);
             $featured = $this->featuredProducts();
             $discount = $this->discountPrice();
-            $rescueHome = $this->rescueListHome($city_id);
-            $adoption = $this->adoptionListHome($city_id);
+            $rescueHome = $this->rescueListHome($latitude, $longitude, $city_id);
+            $adoption = $this->adoptionListHome($latitude, $longitude, $city_id);
             $bannerImg = $this->imageBanner();
 
             return response()->json([
@@ -277,34 +278,93 @@ class DashboardController
     }
 
 
-    public function rescueListHome($city_id)
+    public function rescueListHome($latitude = null, $longitude = null, $city_id = null)
     {
         try {
-            $query = DB::table('rescuepet as r')
-                ->select(
-    'r.id',
-    'r.img1',
-    'r.img2',
-    'r.img3',
-    'r.img4',
-    'r.img5',
-    'r.img6',
-    'r.address',
-    'c.name as conditionType',
-    'r.conditionLevel_id as conditionStatus',
-    'r.gender',
-    DB::raw("(((radians(acos(sin(radians(15.2993)) * sin(radians(r.latitude)) + cos(radians(15.2993)) * cos(radians(r.latitude)) * cos(radians(74.1240 - r.longitude))))) * 60 * 1.1515) * 1.609344) AS Distance")
-)
-                ->join('petcondition as c', 'c.id', '=', 'r.condition_id');
+            // If coordinates are provided, use them for distance calculation
+            if ($latitude !== null && $longitude !== null) {
+                $userLat = $latitude;
+                $userLng = $longitude;
 
-            if ($city_id) {
-                $query->whereIn('r.city_id', explode(',', $city_id)); // support for multiple IDs
+                $query = DB::table('rescuepet as r')
+                    ->select(
+        'r.id',
+        'r.img1',
+        'r.img2',
+        'r.img3',
+        'r.img4',
+        'r.img5',
+        'r.img6',
+        'r.address',
+        'c.name as conditionType',
+        'r.conditionLevel_id as conditionStatus',
+        'r.gender',
+        'r.latitude',
+        'r.longitude',
+        DB::raw("6371000 * 2 * ASIN(SQRT(POW(SIN(RADIANS($userLat - r.latitude)/2), 2) + COS(RADIANS($userLat)) * COS(RADIANS(r.latitude)) * POW(SIN(RADIANS($userLng - r.longitude)/2), 2))) AS Distance")
+    )
+                    ->join('petcondition as c', 'c.id', '=', 'r.condition_id')
+                    ->having('Distance', '<=', 50000)  // Filter pets within 50km
+                    ->orderBy('Distance', 'ASC')
+                    ->limit(6);
+            }
+            // If city_id is provided but no coordinates, filter by city
+            elseif ($city_id !== null) {
+                $query = DB::table('rescuepet as r')
+                    ->select(
+        'r.id',
+        'r.img1',
+        'r.img2',
+        'r.img3',
+        'r.img4',
+        'r.img5',
+        'r.img6',
+        'r.address',
+        'c.name as conditionType',
+        'r.conditionLevel_id as conditionStatus',
+        'r.gender',
+        'r.latitude',
+        'r.longitude',
+        DB::raw("0 AS Distance")  // No distance calculation if no coordinates
+    )
+                    ->join('petcondition as c', 'c.id', '=', 'r.condition_id')
+                    ->where('r.city_id', $city_id)
+                    ->orderBy('r.id', 'DESC')  // Order by most recent if no distance
+                    ->limit(6);
+            }
+            // Default fallback
+            else {
+                $userLat = 15.2993;
+                $userLng = 74.1240;
+
+                $query = DB::table('rescuepet as r')
+                    ->select(
+        'r.id',
+        'r.img1',
+        'r.img2',
+        'r.img3',
+        'r.img4',
+        'r.img5',
+        'r.img6',
+        'r.address',
+        'c.name as conditionType',
+        'r.conditionLevel_id as conditionStatus',
+        'r.gender',
+        'r.latitude',
+        'r.longitude',
+        DB::raw("6371000 * 2 * ASIN(SQRT(POW(SIN(RADIANS($userLat - r.latitude)/2), 2) + COS(RADIANS($userLat)) * COS(RADIANS(r.latitude)) * POW(SIN(RADIANS($userLng - r.longitude)/2), 2))) AS Distance")
+    )
+                    ->join('petcondition as c', 'c.id', '=', 'r.condition_id')
+                    ->having('Distance', '<=', 50000)  // Filter pets within 50km
+                    ->orderBy('Distance', 'ASC')
+                    ->limit(6);
             }
 
-            $rescueList = $query
-                ->orderBy('Distance', 'ASC')
-                ->limit(6)
-                ->get();
+            $rescueList = $query->get();
+
+            if ($rescueList->isEmpty()) {
+                return response()->json(['message' => 'No pets in your region']);
+            }
 
             return response()->json($rescueList);
         } catch (\Exception $e) {
@@ -313,55 +373,61 @@ class DashboardController
     }
 
 
-   public function adoptionListHome($city_id )
+   public function adoptionListHome($latitude = null, $longitude = null, $city_id = null)
     {
         try {
-            $latitude = 15.2993;
-            $longitude = 74.1240;
+            // If coordinates are provided, use them for distance calculation
+            if ($latitude !== null && $longitude !== null) {
+                $userLat = $latitude;
+                $userLng = $longitude;
 
-            $distanceCalc = "(((radians(acos(sin(radians($latitude)) * sin(radians(a.latitude)) + cos(radians($latitude)) * cos(radians(a.latitude)) * cos(radians($longitude - a.longitude))))) * 60 * 1.1515) * 1.609344)";
-
-            if ($city_id) {
                 $sql = "
-                    (
-                        SELECT
-                            a.adopt_id, a.c_id, a.dob, a.gender, ai.image_path as img1, a.name,
-                            $distanceCalc AS Distance
-                        FROM adopt AS a
-                        LEFT JOIN adopt_images ai ON a.adopt_id = ai.adopt_id AND ai.image_order = 1
-                        WHERE a.city_id IN(?) AND a.petFlag = 2
-                    )
-                    UNION
-                    (
-                        SELECT
-                            a.adopt_id, a.c_id, a.dob, a.gender, ai.image_path as img1, a.name,
-                            $distanceCalc AS Distance
-                        FROM adopt AS a
-                        LEFT JOIN adopt_images ai ON a.adopt_id = ai.adopt_id AND ai.image_order = 1
-                        INNER JOIN animal AS b ON a.animal_typ = b.animal_id
-                        INNER JOIN breed AS c ON c.animal_id = b.animal_id
-                        WHERE a.petFlag = 2
-                        GROUP BY a.adopt_id
-                        ORDER BY Distance ASC
-                        LIMIT 6
-                    )
-                ";
-                $adoptionList = DB::select($sql, [$city_id]);
-            } else {
-                $sql = "
-                    SELECT 
-                        a.adopt_id, a.c_id, a.dob, a.gender, ai.image_path as img1, a.name, 
-                        $distanceCalc AS Distance
-                    FROM adopt AS a 
-                    LEFT JOIN adopt_images ai ON a.adopt_id = ai.adopt_id AND ai.image_order = 1
-                    INNER JOIN animal AS b ON a.animal_typ = b.animal_id 
-                    INNER JOIN breed AS c ON c.animal_id = b.animal_id 
-                    WHERE a.petFlag = 2 
-                    GROUP BY a.adopt_id 
-                    ORDER BY Distance ASC 
+                    SELECT
+                        a.adopt_id, a.c_id, a.dob, a.gender,
+                        (SELECT image_path FROM adopt_images WHERE adopt_id = a.adopt_id AND image_order = 1 LIMIT 1) as img1,
+                        a.name, a.latitude, a.longitude,
+                        6371000 * 2 * ASIN(SQRT(POW(SIN(RADIANS(? - a.latitude)/2), 2) + COS(RADIANS(?)) * COS(RADIANS(a.latitude)) * POW(SIN(RADIANS(? - a.longitude)/2), 2))) AS Distance
+                    FROM adopt AS a
+                    WHERE a.petFlag = 2
+                    HAVING Distance <= 50000
+                    ORDER BY Distance ASC
                     LIMIT 6
                 ";
-                $adoptionList = DB::select($sql);
+                $adoptionList = DB::select($sql, [$userLat, $userLat, $userLng]);
+            }
+            // If city_id is provided but no coordinates, filter by city
+            elseif ($city_id !== null) {
+                $sql = "
+                    SELECT
+                        a.adopt_id, a.c_id, a.dob, a.gender,
+                        (SELECT image_path FROM adopt_images WHERE adopt_id = a.adopt_id AND image_order = 1 LIMIT 1) as img1,
+                        a.name, a.latitude, a.longitude,
+                        0 AS Distance
+                    FROM adopt AS a
+                    WHERE a.petFlag = 2 AND a.city_id = ?
+                    ORDER BY a.adopt_id DESC
+                    LIMIT 6
+                ";
+                $adoptionList = DB::select($sql, [$city_id]);
+            }
+            // Default fallback
+            else {
+                $userLat = 15.2993;
+                $userLng = 74.1240;
+
+                $sql = "
+                    SELECT
+                        a.adopt_id, a.c_id, a.dob, a.gender,
+                        (SELECT image_path FROM adopt_images WHERE adopt_id = a.adopt_id AND image_order = 1 LIMIT 1) as img1,
+                        a.name, a.latitude, a.longitude,
+                        6371000 * 2 * ASIN(SQRT(POW(SIN(RADIANS(? - a.latitude)/2), 2) + COS(RADIANS(?)) * COS(RADIANS(a.latitude)) * POW(SIN(RADIANS(? - a.longitude)/2), 2))) AS Distance
+                    FROM adopt AS a
+                    WHERE a.petFlag = 2
+                    HAVING Distance <= 50000
+                    ORDER BY Distance ASC
+                    LIMIT 6
+                ";
+                $adoptionList = DB::select($sql, [$userLat, $userLat, $userLng]);
             }
 
             return response()->json($adoptionList);

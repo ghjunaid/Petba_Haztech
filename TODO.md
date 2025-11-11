@@ -1,13 +1,8 @@
-- [x] Update LocationProvider.dart to use API search instead of local filtering
-- [x] Add necessary imports (http, convert, Config)
-- [x] Replace hardcoded popularCities with API-fetched cities
-- [x] Add loading state and error handling for API calls
-- [x] Update UI to display city details (name, district, state)
-- [x] Test the updated location picker functionality - Flutter analyze shows 29 issues (mostly lint warnings, no errors)
-- [x] Update UserDataService to include city latitude and longitude storage
-- [x] Add methods to get/set city coordinates in UserDataService
-- [x] Update clearUserData and clearCitySelection to remove lat/lng keys
-- [x] Add getCityLat, getCityLng, setCityCoordinates, and getCityData methods
-- [x] Update SelectCityScreen to attempt fetching coordinates when saving city selection
-- [x] Update UserDataService.getHomePageData() to use latitude/longitude instead of city_id
-- [x] Update HomePage to use coordinates for dashboard content instead of city-based filtering
+# TODO: Fix LocationProvider to save city_id when selecting city
+
+## Pending Tasks
+- [ ] Modify LocationProvider.dart to change onLocationSelected callback to include cityId (Function(String, int?))
+- [ ] Update LocationPickerBottomSheet to pass cityId when selecting a city
+- [ ] Save city_id in UserDataService when selecting a city
+- [ ] Update HomePage.dart to accept the new callback signature (ignore cityId in the callback)
+- [ ] Test the changes to ensure rescue pets update correctly when changing location via LocationProvider

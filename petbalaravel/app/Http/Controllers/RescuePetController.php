@@ -128,6 +128,9 @@ class RescuePetController
                 }
             }
 
+            // Filter by distance (50km radius)
+            $query->having('Distance', '<=', 50);
+
             $rescueList = $query->limit($limitis)->get();
 
             return response()->json(['rescueList' => $rescueList]);
