@@ -1,23 +1,13 @@
-# TODO: Add Filter Functionality to ProductsScreen.dart
-
-## Steps Completed:
-1. ✅ Add Filter and FilterGroup model classes to ProductsScreen.dart
-2. ✅ Add filter-related variables (filterGroups, filters, isLoadingFilters, _selectedFilterGroupIndex)
-3. ✅ Implement _loadFilters method using the provided API call with type = 6
-4. ✅ Call _loadFilters in initState
-5. ✅ Add filter button to the UI in the app bar
-6. ✅ Implement _showFilterBottomSheet method with filter groups and filters
-7. ✅ Implement filter UI with selectable groups and checkboxes
-8. ✅ Add Clear All functionality
-9. ✅ Add Apply and Cancel buttons
-10. ✅ Test the filter modal and API integration
-11. ✅ Verify UI and functionality
-
-## Notes:
-- Filter functionality has been successfully implemented
-- The filter bottom sheet displays filter groups on the left and corresponding filters on the right
-- Users can select filter groups and then check/uncheck individual filters
-- Clear All button resets all filter selections
-- Apply button closes the modal (filter logic can be implemented later)
-- Cancel button closes the modal without applying changes
-- API integration loads filters from the backend using type = 6
+- [x] Update LocationProvider.dart to use API search instead of local filtering
+- [x] Add necessary imports (http, convert, Config)
+- [x] Replace hardcoded popularCities with API-fetched cities
+- [x] Add loading state and error handling for API calls
+- [x] Update UI to display city details (name, district, state)
+- [x] Test the updated location picker functionality - Flutter analyze shows 29 issues (mostly lint warnings, no errors)
+- [x] Update UserDataService to include city latitude and longitude storage
+- [x] Add methods to get/set city coordinates in UserDataService
+- [x] Update clearUserData and clearCitySelection to remove lat/lng keys
+- [x] Add getCityLat, getCityLng, setCityCoordinates, and getCityData methods
+- [x] Update SelectCityScreen to attempt fetching coordinates when saving city selection
+- [x] Update UserDataService.getHomePageData() to use latitude/longitude instead of city_id
+- [x] Update HomePage to use coordinates for dashboard content instead of city-based filtering
