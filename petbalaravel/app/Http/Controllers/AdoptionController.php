@@ -123,53 +123,30 @@ class AdoptionController
                 ->whereIn('co.id', $color);
         }
 
-        if ($cityId) {
-            $query->where('a.city_id', $cityId);
+        // Only filter by city if latitude/longitude are not provided
+        if (!$latitudeSelf || !$longitudeSelf) {
+            if ($cityId) {
+                $query->where('a.city_id', $cityId);
+            }
         }
 
-        // Sorting & pagination
-
-        if ($newSort) {
+        // Sorting & location filtering
+        if ($latitudeSelf && $longitudeSelf) {
+            // Add distance calculation and filter within 50km
+            $query->addSelect(DB::raw("(((radians(acos(sin(radians($latitudeSelf)) * sin(radians(a.latitude)) + cos(radians($latitudeSelf)) * cos(radians(a.latitude)) * cos(radians($longitudeSelf - a.longitude))))) * 60 * 1.1515) * 1.609344) AS Distance"));
+            $query->having('Distance', '<=', 50);
+            $query->orderBy('Distance', 'ASC');
+        } else if ($newSort) {
             $query->orderByDesc('a.adopt_id');
-        } elseif ($ageSort) {
+        } else if ($ageSort) {
             $query->orderByDesc('a.dob');
-        } elseif ($locationSort && $latitudeSelf && $longitudeSelf) {
-            // Use raw SQL for distance sorting
-            $sql = "
-                SELECT a.adopt_id, a.c_id, a.name, a.gender, a.dob, adopt_images.image_path as img1, a.city,
-                    b.name as animalName, c.name as breed,
-                    (6371 * acos(
-                        cos(radians(?)) * cos(radians(a.latitude)) *
-                        cos(radians(a.longitude) - radians(?)) +
-                        sin(radians(?)) * sin(radians(a.latitude))
-                    )) AS Distance
-                FROM adopt a
-                LEFT JOIN animal b ON a.animal_typ = b.animal_id
-                LEFT JOIN breed c ON a.breed = c.id
-                LEFT JOIN adopt_images ON a.adopt_id = adopt_images.adopt_id AND adopt_images.image_order = 1
-                WHERE a.petFlag = 2
-                AND a.city_id = ?
-                ORDER BY Distance ASC
-            ";
-
-            $results = DB::select($sql, [
-                $latitudeSelf,
-                $longitudeSelf,
-                $latitudeSelf,
-                $cityId,
-            ]);
-
-            return response()->json(['listadopt' => $results]);
         } else {
-            // Default sorting by adopt_id descending if no sorting specified
             $query->orderByDesc('a.adopt_id');
         }
 
         // No limit/offset applied: return all matching rows
-
         try {
             $results = $query->get();
-
             return response()->json(['listadopt' => $results]);
         } catch (\Exception $e) {
             return response()->json(['error' => ['text' => $e->getMessage()]], 500);

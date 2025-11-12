@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:petba_new/providers/Config.dart';
 import 'package:petba_new/models/adoption.dart';
 import 'package:petba_new/screens/PetDetailPage.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 
 import '../chat/Model/ChatModel.dart';
 import '../chat/Model/Messagemodel.dart';
@@ -24,10 +26,54 @@ class _AdoptionPageState extends State<AdoptionPage> {
   String _error = '';
   bool _isGridView = true;
 
+  // Location data
+  double _latitude = 0.0;
+  double _longitude = 0.0;
+
   @override
   void initState() {
     super.initState();
-    _fetchAdoptionData();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await _getCurrentLocation();
+    await _fetchAdoptionData();
+  }
+
+  Future<void> _getCurrentLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        return;
+      }
+
+      Position position =
+          await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high,
+          ).timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw Exception('Location request timed out'),
+          );
+
+      if (mounted) {
+        setState(() {
+          _latitude = position.latitude;
+          _longitude = position.longitude;
+        });
+      }
+    } catch (e) {
+      print('Error getting location: $e');
+    }
   }
 
   Future<void> _fetchAdoptionData() async {
@@ -37,14 +83,36 @@ class _AdoptionPageState extends State<AdoptionPage> {
         _error = '';
       });
 
-      final userData = await UserDataService.getUserData();
-      final currentUserId = userData?['customer_id'] ?? userData?['id'];
+      // Always fetch the latest saved coordinates in case user changed location elsewhere
+      try {
+        final storedLat = await UserDataService.getLatitude();
+        final storedLng = await UserDataService.getLongitude();
+        if (storedLat != null && storedLng != null) {
+          if (mounted) {
+            setState(() {
+              _latitude = storedLat;
+              _longitude = storedLng;
+            });
+          }
+        }
+      } catch (e) {
+        // ignore and use current in-memory coordinates
+        print('Error reading stored coordinates: $e');
+      }
+
+      final requestBody = {
+        'c_id':
+            null, // Allow global results based on location, not user-specific
+        'latitude': _latitude,
+        'longitude': _longitude,
+      };
 
       final response = await http.post(
         Uri.parse('$apiurl/api/listadoption'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'c_id': currentUserId}),
+        body: json.encode(requestBody),
       );
+      print('Adoption-List request: ${json.encode(requestBody)}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);

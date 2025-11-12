@@ -112,7 +112,8 @@ class RescuePetController
                 $query->whereIn('R.gender', $gender);
             }
 
-            if (!empty($city)) {
+            // Only filter by city if latitude/longitude are not provided
+            if ((empty($latitudeSelf) || empty($longitudeSelf)) && !empty($city)) {
                 $query->whereIn('R.city_id', $city);
             }
 

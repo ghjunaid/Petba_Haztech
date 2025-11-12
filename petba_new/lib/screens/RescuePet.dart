@@ -29,8 +29,6 @@ class _RescuePageState extends State<RescuePage> {
   bool _hasMoreData = true;
   bool _isLoadingInitialData = true;
   int? _cityId; // currently selected city id
-  // Radius (in km) to filter nearby rescues after sorting by distance
-  double _radiusKm = 50.0;
 
   // Location data
   double _latitude = 0.0;
@@ -273,17 +271,28 @@ class _RescuePageState extends State<RescuePage> {
 
       // Create request body: do NOT filter by customer or city (global),
       // and sort by distance on the backend using provided lat/lon
+      // Read latest saved coordinates in case user changed location elsewhere
+      try {
+        final storedLat = await UserDataService.getLatitude();
+        final storedLng = await UserDataService.getLongitude();
+        if (storedLat != null && storedLng != null) {
+          if (mounted) {
+            setState(() {
+              _latitude = storedLat;
+              _longitude = storedLng;
+            });
+          }
+        }
+      } catch (e) {
+        print('Error reading stored coordinates: $e');
+      }
+
       final requestBody = {
         'c_id': null, // allow global results, not user-specific
         'latitude': _latitude,
         'longitude': _longitude,
         'lastPet': refresh ? null : _lastPet,
-        'filter': {
-          'condition': [],
-          'animalType': [],
-          'gender': [],
-          'city': [],
-        },
+        'filter': {'condition': [], 'animalType': [], 'gender': [], 'city': []},
         'sort': _sortOption,
       };
 
@@ -294,7 +303,7 @@ class _RescuePageState extends State<RescuePage> {
         headers: {'Content-Type': 'application/json'},
         body: json.encode(requestBody),
       );
-
+      print('Rescue-List request: ${json.encode(requestBody)}');
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
 
@@ -302,47 +311,14 @@ class _RescuePageState extends State<RescuePage> {
         final data = json.decode(response.body);
         print('Parsed data: $data');
 
-        List<Map<String, dynamic>> newRescues =
-            List<Map<String, dynamic>>.from(data['rescueList'] ?? []);
+        List<Map<String, dynamic>> newRescues = List<Map<String, dynamic>>.from(
+          data['rescueList'] ?? [],
+        );
 
         print('New rescues count: ${newRescues.length}');
 
-        // Calculate distances for each rescue item
-        for (var rescue in newRescues) {
-          if (rescue.containsKey('latitude') &&
-              rescue.containsKey('longitude') &&
-              rescue['latitude'] != null &&
-              rescue['longitude'] != null) {
-            try {
-              double petLat = double.parse(rescue['latitude'].toString());
-              double petLng = double.parse(rescue['longitude'].toString());
-              double distanceInMeters = Geolocator.distanceBetween(
-                _latitude,
-                _longitude,
-                petLat,
-                petLng,
-              );
-              double distanceInKm = distanceInMeters / 1000.0;
-              rescue['Distance'] = distanceInKm;
-              print(
-                'Calculated distance for pet: ${distanceInKm.toStringAsFixed(2)} km',
-              );
-            } catch (e) {
-              print('Error calculating distance: $e');
-              rescue['Distance'] = 0.0;
-            }
-          } else {
-            rescue['Distance'] = 0.0;
-          }
-        }
-
-        // Keep only rescues within the selected radius
-        newRescues = newRescues
-            .where((r) =>
-                double.tryParse(r['Distance']?.toString() ?? '0') != null &&
-                (double.tryParse(r['Distance']?.toString() ?? '0') ?? 0) <=
-                    _radiusKm)
-            .toList();
+        // Backend already filters by 50km radius, no need for client-side filtering
+        // Distance is calculated and returned by backend in the response
 
         setState(() {
           if (refresh) {
