@@ -1,3 +1,4 @@
+// cart.dart
 class CartItem {
   final int productId;
   final String model;
