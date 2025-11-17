@@ -8,7 +8,6 @@ import 'package:petba_new/models/address.dart';
 import 'package:petba_new/providers/Config.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 
-
 class AddNewAddressPage extends StatefulWidget {
   final String customerId;
   final String email;
@@ -559,85 +558,67 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
   }
 
   Widget _buildStateDropdown() {
-    return DropdownButtonFormField<String>(
-      value: _selectedState,
-      decoration: _inputDecoration('State', Icons.map).copyWith(
-        suffixIcon: _isLoadingStates
-            ? Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: _inlineLoader(),
-              )
-            : null,
+    return DropdownSearch<String>(
+      items: (String filter, LoadProps? lp) => _stateOptions,
+      selectedItem: _selectedState,
+      popupProps: PopupProps.menu(
+        showSearchBox: true,
+        searchFieldProps: TextFieldProps(
+          decoration: const InputDecoration(hintText: 'Search state...'),
+        ),
       ),
-      items: _stateOptions
-          .map(
-            (state) =>
-                DropdownMenuItem<String>(value: state, child: Text(state)),
-          )
-          .toList(),
-      onChanged: _stateOptions.isEmpty
-          ? null
-          : (value) {
-              setState(() {
-                _selectedState = value;
-                _selectedCity = null;
-                _selectedDistrict = null;
-              });
-              if (value != null) {
-                _loadCitiesForState(value);
-              }
-            },
+      decoratorProps: DropDownDecoratorProps(
+        decoration: _inputDecoration("State", Icons.map),
+      ),
+      onChanged: (value) {
+        setState(() {
+          _selectedState = value;
+          _selectedCity = null;
+          _selectedDistrict = null;
+        });
+
+        if (value != null) {
+          _loadCitiesForState(value);
+        }
+      },
       validator: (value) =>
-          value == null || value.isEmpty ? 'Please select a state' : null,
-      dropdownColor: AppColors.primaryColor,
-      style: const TextStyle(color: AppColors.white),
+          value == null || value.isEmpty ? "Please select a state" : null,
     );
   }
 
   Widget _buildCityDropdown() {
-    final cityItems = _cityOptions
-        .map(
-          (city) => DropdownMenuItem<String>(
-            value: city['city']?.toString(),
-            child: Text(
-              city['district'] != null && city['district'].toString().isNotEmpty
-                  ? '${city['city']} • ${city['district']}'
-                  : city['city']?.toString() ?? '',
-            ),
-          ),
-        )
+    final List<String> cityNames = _cityOptions
+        .map((e) => e['city'].toString())
         .toList();
 
-    return DropdownButtonFormField<String>(
-      value: _selectedCity,
-      decoration: _inputDecoration('City', Icons.location_city).copyWith(
-        suffixIcon: (_isLoadingCities || _isResolvingCity)
-            ? Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: _inlineLoader(),
-              )
-            : null,
+    return DropdownSearch<String>(
+      items: (String filter, LoadProps? lp) => cityNames,
+      selectedItem: _selectedCity,
+      popupProps: PopupProps.menu(
+        showSearchBox: true,
+        searchFieldProps: TextFieldProps(
+          decoration: const InputDecoration(hintText: 'Search city...'),
+        ),
       ),
-      items: cityItems,
-      onChanged: _cityOptions.isEmpty
-          ? null
-          : (value) {
-              setState(() {
-                _selectedCity = value;
-                final match = _cityOptions.firstWhere(
-                  (city) => city['city'] == value,
-                  orElse: () => <String, dynamic>{},
-                );
-                _selectedDistrict = match['district']?.toString();
-              });
-              if (value != null) {
-                _fetchPincodeByCity(value);
-              }
-            },
+      decoratorProps: DropDownDecoratorProps(
+        decoration: _inputDecoration("City", Icons.location_city),
+      ),
+      onChanged: (value) {
+        setState(() {
+          _selectedCity = value;
+          final match = _cityOptions.firstWhere(
+            (city) => city['city'] == value,
+            orElse: () => {},
+          );
+          _selectedDistrict = match['district']?.toString();
+        });
+
+        if (value != null) {
+          _fetchPincodeByCity(value);
+        }
+      },
       validator: (value) =>
-          value == null || value.isEmpty ? 'Please select a city' : null,
-      dropdownColor: AppColors.primaryColor,
-      style: const TextStyle(color: AppColors.white),
+          value == null || value.isEmpty ? "Please select a city" : null,
     );
   }
 
