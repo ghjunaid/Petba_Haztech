@@ -55,6 +55,7 @@ Route::post('allpetcateg', [PetController::class, 'allPetCateg']);
 
 Route::post('dashboard', [DashboardController::class, 'dashboard']);
 Route::post('featuredproducts', [DashboardController::class, 'featuredProducts']);
+Route::post('speacial', [DashboardController::class, 'discountPrice']);
 
 Route::post('cartProducts', [CartController::class, 'cartProducts']);
 Route::post('addcart', [CartController::class, 'addcart']);
@@ -195,6 +196,10 @@ Route::post('load-my-city', [CityController::class, 'loadMyCity']);
 Route::post('search-city', [CityController::class, 'searchCity']);
 Route::post('/add-cities-link', [CityController::class, 'addCitiesLink']);
 Route::delete('/delete-city', [CityController::class, 'deleteCity']);
+Route::post('location/pincode', [CityController::class, 'fetchLocationByPincode']);
+Route::post('location/country', [CityController::class, 'fetchStatesByCountry']);
+Route::post('location/state', [CityController::class, 'fetchCitiesByState']);
+Route::post('location/city', [CityController::class, 'fetchPincodeByCity']);
 
 Route::post('/notification-list', [NotificationController::class, 'notificationList']);
 Route::post('/clear-notification', [NotificationController::class, 'clearNotification']);

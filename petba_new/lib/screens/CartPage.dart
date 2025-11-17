@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:petba_new/models/cart.dart';
+import 'package:petba_new/screens/AddNewAddress.dart';
 
 import '../providers/Config.dart';
 
@@ -305,13 +306,33 @@ class _CartPageState extends State<CartPage> {
               ),
               child: ElevatedButton(
                 onPressed: () {
-                  if (cartItems.isNotEmpty) {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => OrderSuccessPage(),
+                  if (cartItems.isEmpty) {
+                    return;
+                  }
+
+                  final token = widget.token;
+                  if (token == null || token.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Login required before checkout.'),
+                        backgroundColor: Colors.red,
                       ),
                     );
+                    return;
                   }
+
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => AddNewAddressPage(
+                        customerId: widget.customerId,
+                        email: widget.email,
+                        token: token,
+                        onSuccess: () async {
+                          await fetchCartProducts();
+                        },
+                      ),
+                    ),
+                  );
                 },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -221,6 +221,7 @@ class DashboardController
                 ->join('oc_product_to_category as ptc', 'p.product_id', '=', 'ptc.product_id')
                 ->join('oc_category_description as cate', 'ptc.category_id', '=', 'cate.category_id')
                 ->join('oc_manufacturer', 'p.manufacturer_id', '=', 'oc_manufacturer.manufacturer_id')
+                ->groupBy('p.product_id')
 
                 // Subquery for discounts
                 ->leftJoin(DB::raw('(

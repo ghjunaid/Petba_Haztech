@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 
 class CityController
 {
+    private const DEFAULT_COUNTRY = 'India';
+
     public function loadCities(Request $request)
     {
         $data = $request->validate([
@@ -221,5 +223,131 @@ class CityController
         } catch (\Exception $e) {
             return response()->json(['error' => ['text' => $e->getMessage()]], 500);
         }
+    }
+
+    /**
+     * Fetch country/state/city information from a pincode.
+     */
+    public function fetchLocationByPincode(Request $request)
+    {
+        $validated = $request->validate([
+            'pincode' => 'required|digits:6',
+        ]);
+
+        $record = DB::table('cities')
+            ->where('pincode', $validated['pincode'])
+            ->select('city_id', 'city', 'district', 'state', 'pincode')
+            ->first();
+
+        if (!$record) {
+            return response()->json(['error' => 'Pincode not found'], 404);
+        }
+
+        return response()->json([
+            'location' => [
+                'country'  => self::DEFAULT_COUNTRY,
+                'state'    => $record->state,
+                'city'     => $record->city,
+                'district' => $record->district,
+                'pincode'  => $record->pincode,
+                'city_id'  => $record->city_id,
+            ],
+        ]);
+    }
+
+    /**
+     * Fetch states and top cities for a given country.
+     */
+    public function fetchStatesByCountry(Request $request)
+    {
+        $validated = $request->validate([
+            'country' => 'required|string|max:100',
+            'limit'   => 'sometimes|integer|min:1|max:500',
+        ]);
+
+        $country = strtolower(trim($validated['country']));
+        if ($country !== strtolower(self::DEFAULT_COUNTRY)) {
+            return response()->json(['error' => 'Country not supported'], 422);
+        }
+
+        $states = DB::table('cities')
+            ->select('state')
+            ->distinct()
+            ->orderBy('state')
+            ->pluck('state');
+
+        $cityLimit = $validated['limit'] ?? 200;
+        $cities = DB::table('cities')
+            ->select('city', 'state', 'pincode')
+            ->distinct()
+            ->orderBy('city')
+            ->limit($cityLimit)
+            ->get();
+
+        return response()->json([
+            'country' => self::DEFAULT_COUNTRY,
+            'states'  => $states,
+            'cities'  => $cities,
+        ]);
+    }
+
+    /**
+     * Fetch cities for a given state.
+     */
+    public function fetchCitiesByState(Request $request)
+    {
+        $validated = $request->validate([
+            'state' => 'required|string|max:100',
+        ]);
+
+        $state = $validated['state'];
+
+        $cities = DB::table('cities')
+            ->where('state', $state)
+            ->orderBy('city')
+            ->get(['city_id', 'city', 'district', 'pincode']);
+
+        if ($cities->isEmpty()) {
+            return response()->json(['error' => 'State not found'], 404);
+        }
+
+        return response()->json([
+            'state'  => $state,
+            'cities' => $cities,
+        ]);
+    }
+
+    /**
+     * Fetch pincode information for a given city name.
+     */
+    public function fetchPincodeByCity(Request $request)
+    {
+        $validated = $request->validate([
+            'city'   => 'required|string|max:100',
+            'state'  => 'sometimes|string|max:100',
+            'limit'  => 'sometimes|integer|min:1|max:10',
+        ]);
+
+        $query = DB::table('cities')
+            ->where('city', $validated['city']);
+
+        if (!empty($validated['state'])) {
+            $query->where('state', $validated['state']);
+        }
+
+        $limit = $validated['limit'] ?? 1;
+
+        $records = $query
+            ->orderBy('pincode')
+            ->limit($limit)
+            ->get(['city_id', 'city', 'state', 'district', 'pincode']);
+
+        if ($records->isEmpty()) {
+            return response()->json(['error' => 'City not found'], 404);
+        }
+
+        return response()->json([
+            'results' => $records,
+        ]);
     }
 }
