@@ -34,30 +34,30 @@ class CityController
     }
 
     // ✅ Load distinct states with pagination (from `cities` table, not rescue_states)
-  public function loadState(Request $request)
-{
-    $data = $request->validate([
-        'offset' => 'required|integer|min:0',
-    ]);
+    public function loadState(Request $request)
+    {
+        $data = $request->validate([
+            'offset' => 'required|integer|min:0',
+        ]);
 
-    $offset = $data['offset'];
+        $offset = $data['offset'];
 
-    try {
-        $states = DB::table('cities')
-            ->select('state')
-            ->groupBy('state')
-            ->offset($offset)
-            ->limit(15)
-            ->get();
+        try {
+            $states = DB::table('cities')
+                ->select('state')
+                ->groupBy('state')
+                ->offset($offset)
+                ->limit(15)
+                ->get();
 
-        // ✅ Debugging output
+            // ✅ Debugging output
 
 
-        return response()->json(['searchitems' => $states]);
-    } catch (\Exception $e) {
-        return response()->json(['error' => ['text' => $e->getMessage()]], 500);
+            return response()->json(['searchitems' => $states]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => ['text' => $e->getMessage()]], 500);
+        }
     }
-}
 
 
     // Load cities by state code (still uses rescue_cities table for backward compatibility)
@@ -225,129 +225,34 @@ class CityController
         }
     }
 
-    /**
-     * Fetch country/state/city information from a pincode.
-     */
-    public function fetchLocationByPincode(Request $request)
-    {
-        $validated = $request->validate([
-            'pincode' => 'required|digits:6',
-        ]);
-
-        $record = DB::table('cities')
-            ->where('pincode', $validated['pincode'])
-            ->select('city_id', 'city', 'district', 'state', 'pincode')
-            ->first();
-
-        if (!$record) {
-            return response()->json(['error' => 'Pincode not found'], 404);
-        }
-
-        return response()->json([
-            'location' => [
-                'country'  => self::DEFAULT_COUNTRY,
-                'state'    => $record->state,
-                'city'     => $record->city,
-                'district' => $record->district,
-                'pincode'  => $record->pincode,
-                'city_id'  => $record->city_id,
-            ],
-        ]);
-    }
 
     /**
      * Fetch states and top cities for a given country.
      */
     public function fetchStatesByCountry(Request $request)
-    {
-        $validated = $request->validate([
-            'country' => 'required|string|max:100',
-            'limit'   => 'sometimes|integer|min:1|max:500',
-        ]);
+{
+    $validated = $request->validate([
+        'country' => 'required|string|max:100',
+    ]);
 
-        $country = strtolower(trim($validated['country']));
-        if ($country !== strtolower(self::DEFAULT_COUNTRY)) {
-            return response()->json(['error' => 'Country not supported'], 422);
-        }
-
-        $states = DB::table('cities')
-            ->select('state')
-            ->distinct()
-            ->orderBy('state')
-            ->pluck('state');
-
-        $cityLimit = $validated['limit'] ?? 200;
-        $cities = DB::table('cities')
-            ->select('city', 'state', 'pincode')
-            ->distinct()
-            ->orderBy('city')
-            ->limit($cityLimit)
-            ->get();
-
-        return response()->json([
-            'country' => self::DEFAULT_COUNTRY,
-            'states'  => $states,
-            'cities'  => $cities,
-        ]);
+    if (strtolower($validated['country']) !== 'india') {
+        return response()->json(['error' => 'Country not supported'], 422);
     }
 
-    /**
-     * Fetch cities for a given state.
-     */
-    public function fetchCitiesByState(Request $request)
-    {
-        $validated = $request->validate([
-            'state' => 'required|string|max:100',
-        ]);
+    // Fetch only states belonging to India (country_id = 99)
+    $states = DB::table('oc_zone')
+        ->select('zone_id', 'name as state_name')
+        ->where('country_id', 99)
+        ->where('status', 1)
+        ->orderBy('name', 'ASC')
+        ->get();
 
-        $state = $validated['state'];
+    return response()->json([
+        'country' => 'India',
+        'states'  => $states,
+    ]);
+}
 
-        $cities = DB::table('cities')
-            ->where('state', $state)
-            ->orderBy('city')
-            ->get(['city_id', 'city', 'district', 'pincode']);
 
-        if ($cities->isEmpty()) {
-            return response()->json(['error' => 'State not found'], 404);
-        }
 
-        return response()->json([
-            'state'  => $state,
-            'cities' => $cities,
-        ]);
-    }
-
-    /**
-     * Fetch pincode information for a given city name.
-     */
-    public function fetchPincodeByCity(Request $request)
-    {
-        $validated = $request->validate([
-            'city'   => 'required|string|max:100',
-            'state'  => 'sometimes|string|max:100',
-            'limit'  => 'sometimes|integer|min:1|max:10',
-        ]);
-
-        $query = DB::table('cities')
-            ->where('city', $validated['city']);
-
-        if (!empty($validated['state'])) {
-            $query->where('state', $validated['state']);
-        }
-
-        $limit = $validated['limit'] ?? 1;
-
-        $records = $query
-            ->orderBy('pincode')
-            ->limit($limit)
-            ->get(['city_id', 'city', 'state', 'district', 'pincode']);
-
-        if ($records->isEmpty()) {
-            return response()->json(['error' => 'City not found'], 404);
-        }
-
-        return response()->json([
-            'results' => $records,
-        ]);
-    }
 }
