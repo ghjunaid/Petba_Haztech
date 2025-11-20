@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
 import 'package:petba_new/providers/Config.dart';
 import 'package:petba_new/screens/AddNewAddress.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:petba_new/widgets/order_summary.dart';
+import 'package:petba_new/widgets/step_header.dart';
 
 class AddressListPage extends StatefulWidget {
   final String customerId;
@@ -44,13 +45,11 @@ class _AddressListPageState extends State<AddressListPage> {
       _isLoading = true;
       _error = null;
     });
+
     try {
       final response = await http.post(
         Uri.parse('$apiurl/api/addressList'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'userData': {
             'customer_id': widget.customerId,
@@ -59,41 +58,46 @@ class _AddressListPageState extends State<AddressListPage> {
           },
         }),
       );
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+
         setState(() {
-          _addresses = (data['address'] as List<dynamic>?) ?? [];
+          _addresses = (data['address'] ?? []);
           _isLoading = false;
         });
       } else {
         setState(() {
-          _error = 'Failed to load addresses';
+          _error = "Failed to load addresses";
           _isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        _error = 'Network error: $e';
+        _error = "Network error: $e";
         _isLoading = false;
       });
     }
   }
 
-  Widget _buildAddressTile(Map<String, dynamic> a) {
-    final id = int.tryParse(a['adrs_id']?.toString() ?? '');
-    final name = '${a['f_name'] ?? ''} ${a['l_name'] ?? ''}'.trim();
-    final address1 = a['address']?.toString() ?? '';
-    final address2 = a['address_2']?.toString() ?? '';
-    final city = a['city']?.toString() ?? '';
-    final pin = a['pin']?.toString() ?? '';
-    final country = a['country']?.toString() ?? '';
-    final phone = a['shipping_phone']?.toString() ?? '';
-    final alt = a['alt_number']?.toString() ?? '';
-    final landmark = a['landmark']?.toString() ?? '';
-    final type = a['custom_field']?.toString() ?? '';
+  // -------------------------------------------------------------
+  // BUILD ADDRESS CARD
+  // -------------------------------------------------------------
 
-    final typeColor =
-        {
+  Widget _buildAddressTile(Map<String, dynamic> a) {
+    final id = int.tryParse(a['adrs_id']?.toString() ?? "");
+    final name = '${a['f_name']} ${a['l_name']}'.trim();
+    final address1 = a['address'] ?? '';
+    final address2 = a['address_2'] ?? '';
+    final city = a['city'] ?? '';
+    final pin = a['pin'] ?? '';
+    final country = a['country'] ?? '';
+    final landmark = a['landmark'] ?? '';
+    final phone = a['shipping_phone'] ?? '';
+    final alt = a['alt_number'] ?? '';
+    final type = a['custom_field'] ?? '';
+
+    final typeColor = {
           'Home': Colors.red,
           'Office': Colors.blue,
           'Other': Colors.green,
@@ -111,9 +115,7 @@ class _AddressListPageState extends State<AddressListPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // =====================================================
-              // TOP ROW → Radio + Address Text + Type Badge (RIGHT)
-              // =====================================================
+              // ---------------- TOP ROW ----------------
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -123,94 +125,66 @@ class _AddressListPageState extends State<AddressListPage> {
                     onChanged: (v) => setState(() => _selectedAddressId = v),
                     activeColor: AppColors.green,
                     visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
 
-                  // Expanded left content
+                  // ADDRESS CONTENT (EXPANDED)
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (name.isNotEmpty)
-                          Text(
-                            name,
+                        Text(name,
                             style: const TextStyle(
-                              color: AppColors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
-                          ),
+                                color: AppColors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13)),
 
                         const SizedBox(height: 2),
 
-                        Text(
-                          address1,
-                          style: const TextStyle(
-                            color: AppColors.white,
-                            fontSize: 12,
-                          ),
-                        ),
-
-                        if (address2.isNotEmpty)
-                          Text(
-                            address2,
+                        Text(address1,
                             style: const TextStyle(
-                              color: AppColors.white,
-                              fontSize: 12,
-                            ),
-                          ),
+                                color: AppColors.white, fontSize: 12)),
+
+                        if (address2.toString().isNotEmpty)
+                          Text(address2,
+                              style: const TextStyle(
+                                  color: AppColors.white, fontSize: 12)),
 
                         const SizedBox(height: 2),
 
-                        Text(
-                          '$city - $pin',
-                          style: const TextStyle(
-                            color: AppColors.white,
-                            fontSize: 12,
-                          ),
-                        ),
-
-                        if (country.isNotEmpty)
-                          Text(
-                            country,
+                        Text("$city - $pin",
                             style: const TextStyle(
-                              color: AppColors.white,
-                              fontSize: 12,
-                            ),
-                          ),
+                                color: AppColors.white, fontSize: 12)),
 
-                        if (landmark.isNotEmpty)
+                        Text(country,
+                            style: const TextStyle(
+                                color: AppColors.white, fontSize: 12)),
+
+                        if (landmark.toString().isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 2),
-                            child: Text(
-                              'Landmark: $landmark',
-                              style: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 11,
-                              ),
-                            ),
+                            child: Text("Landmark: $landmark",
+                                style: const TextStyle(
+                                    color: Colors.grey, fontSize: 11)),
                           ),
                       ],
                     ),
                   ),
 
-                  // RIGHT-SIDE TYPE LABEL
+                  // TYPE BADGE (RIGHT)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: typeColor.withOpacity(0.2),
+                      color: typeColor.withOpacity(0.18),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: typeColor, width: 1),
+                      border: Border.all(color: typeColor),
                     ),
                     child: Text(
                       type,
                       style: TextStyle(
                         color: typeColor,
-                        fontSize: 12,
                         fontWeight: FontWeight.w600,
+                        fontSize: 11.5,
                       ),
                     ),
                   ),
@@ -219,46 +193,32 @@ class _AddressListPageState extends State<AddressListPage> {
 
               const SizedBox(height: 10),
 
-              // =====================================================
-              // PHONE + EDIT + DELETE (DELETE AT EXTREME RIGHT)
-              // =====================================================
+              // ---------------- PHONE + EDIT + DELETE ----------------
               Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // LEFT SIDE (EXPANDED)
                   Expanded(
                     child: Row(
                       children: [
-                        if (phone.isNotEmpty)
-                          Text(
-                            'Phone: $phone',
+                        Text("Phone: $phone",
                             style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 11,
-                            ),
-                          ),
-
-                        if (alt.isNotEmpty) ...[
+                                color: Colors.grey, fontSize: 11)),
+                        if (alt.toString().isNotEmpty) ...[
                           const SizedBox(width: 6),
-                          Text(
-                            'Alt: $alt',
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 11,
-                            ),
-                          ),
+                          Text("Alt: $alt",
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 11)),
                         ],
                       ],
                     ),
                   ),
 
-                  // EDIT ICON
+                  // EDIT
                   InkWell(
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => AddNewAddressPage(
+                          builder: (_) => AddNewAddressPage(
                             customerId: widget.customerId,
                             email: widget.email,
                             token: widget.token,
@@ -270,21 +230,19 @@ class _AddressListPageState extends State<AddressListPage> {
                         ),
                       ).then((_) => _loadAddresses());
                     },
-                    child: const Icon(
-                      Icons.edit,
-                      color: AppColors.blue,
-                      size: 20,
-                    ),
+                    child:
+                        const Icon(Icons.edit, color: AppColors.blue, size: 19),
                   ),
 
                   const SizedBox(width: 12),
 
-                  // DELETE ICON (EXTREME RIGHT)
+                  // DELETE (EXTREME RIGHT)
                   InkWell(
                     onTap: () => _deleteAddress(id),
                     child: const Padding(
-                      padding: EdgeInsets.only(right: 0),
-                      child: Icon(Icons.delete, color: AppColors.red, size: 22),
+                      padding: EdgeInsets.only(right: 2),
+                      child:
+                          Icon(Icons.delete, size: 22, color: AppColors.red),
                     ),
                   ),
                 ],
@@ -296,15 +254,17 @@ class _AddressListPageState extends State<AddressListPage> {
     );
   }
 
+  // -------------------------------------------------------------
+  // DELETE ADDRESS
+  // -------------------------------------------------------------
+
   Future<void> _deleteAddress(int? id) async {
     if (id == null) return;
+
     try {
       final response = await http.post(
         Uri.parse('$apiurl/api/deleteAddress'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'userData': {
             'customer_id': widget.customerId,
@@ -314,216 +274,209 @@ class _AddressListPageState extends State<AddressListPage> {
           'address_id': id,
         }),
       );
+
       if (response.statusCode == 200) {
         setState(() {
-          _addresses.removeWhere(
-            (a) => int.tryParse(a['adrs_id']?.toString() ?? '') == id,
-          );
-          if (_selectedAddressId == id) _selectedAddressId = null;
+          _addresses.removeWhere((a) =>
+              int.tryParse(a['adrs_id']?.toString() ?? "") == id);
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Address deleted'),
-            backgroundColor: AppColors.green,
-          ),
-        );
+
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Address deleted"),
+            backgroundColor: AppColors.green));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to delete address'),
-            backgroundColor: AppColors.red,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Failed to delete"), backgroundColor: AppColors.red));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.red),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Error: $e"), backgroundColor: AppColors.red));
     }
   }
 
+  // -------------------------------------------------------------
+  // PROCEED TO PAYMENT
+  // -------------------------------------------------------------
+
   Future<void> _proceedToPayment() async {
+    if (_selectedAddressId == null) return;
+
     final selected = _addresses.firstWhere(
-      (a) => int.tryParse(a['adrs_id']?.toString() ?? '') == _selectedAddressId,
+      (x) => int.tryParse(x['adrs_id'].toString()) == _selectedAddressId,
       orElse: () => null,
     );
+
     if (selected == null) return;
 
     setState(() => _isProceeding = true);
+
     try {
       final payload = {
         'email': widget.email,
-        'total': widget.total ?? 0,
-        'firstname': selected['f_name'] ?? '',
+        'total': widget.total,
+        'firstname': selected['f_name'],
         'arddressid': selected['adrs_id'],
-        'shipping_phone': selected['shipping_phone'] ?? '',
-        'cartproducts': widget.cartProducts ?? [],
+        'shipping_phone': selected['shipping_phone'],
+        'cartproducts': widget.cartProducts,
       };
+
       final response = await http.post(
         Uri.parse('$apiurl/api/payment'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: json.encode(payload),
       );
+
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Redirecting to payment'),
-            backgroundColor: AppColors.green,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Redirecting to payment"),
+            backgroundColor: AppColors.green));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Payment initiation failed'),
-            backgroundColor: AppColors.red,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Payment failed"), backgroundColor: AppColors.red));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.red),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Error: $e"), backgroundColor: AppColors.red));
     } finally {
       setState(() => _isProceeding = false);
     }
   }
 
+  // -------------------------------------------------------------
+  // BUILD PAGE
+  // -------------------------------------------------------------
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.primaryDark,
+
       appBar: AppBar(
-        title: const Text('Select Address'),
-        backgroundColor: AppColors.primaryColor,
-        foregroundColor: AppColors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: AppColors.white),
-            onPressed: _loadAddresses,
+        backgroundColor: AppColors.primaryDark,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text("Select Address",
+            style: TextStyle(color: Colors.white)),
+      ),
+
+      body: Column(
+        children: [
+          // 🔥 SHARED STEPPER (Active step = 2)
+          const StepHeader(activeStep: 2),
+
+          Expanded(
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: AppColors.green))
+                : _error != null
+                    ? Center(
+                        child: Text(_error!,
+                            style:
+                                const TextStyle(color: AppColors.white)))
+                    : _addresses.isEmpty
+                        ? _buildNoAddressView()
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _addresses.length + 1,
+                            itemBuilder: (context, index) {
+                              if (index < _addresses.length) {
+                                return Column(
+                                  children: [
+                                    _buildAddressTile(
+                                        _addresses[index]
+                                            as Map<String, dynamic>),
+                                    const SizedBox(height: 12),
+                                  ],
+                                );
+                              }
+
+                              return OrderSummary(
+                                cartProducts: widget.cartProducts ?? [],
+                                totalOverride: widget.total,
+                              );
+                            },
+                          ),
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppColors.green),
-            )
-          : _error != null
-          ? Center(
-              child: Text(
-                _error!,
-                style: const TextStyle(color: AppColors.white),
-              ),
-            )
-          : _addresses.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+
+      bottomNavigationBar: _addresses.isEmpty
+          ? null
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
                 children: [
-                  const Text(
-                    'No addresses found',
-                    style: TextStyle(color: AppColors.white),
+                  Expanded(
+                    child: _buildAddButton(),
                   ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AddNewAddressPage(
-                            customerId: widget.customerId,
-                            email: widget.email,
-                            token: widget.token,
-                            total: widget.total, // pass total
-                            cartProducts:
-                                widget.cartProducts, // pass cartProducts
-                            onSuccess: () {},
-                          ),
-                        ),
-                      ).then((_) => _loadAddresses());
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.green,
-                      foregroundColor: AppColors.white,
-                    ),
-                    child: const Text('Add New Address'),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildProceedButton(),
                   ),
                 ],
               ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _addresses.length + 1,
-              itemBuilder: (context, index) {
-                if (index < _addresses.length) {
-                  return Column(
-                    children: [
-                      _buildAddressTile(
-                        _addresses[index] as Map<String, dynamic>,
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-                  );
-                }
-                return OrderSummary(
-                  cartProducts: (widget.cartProducts ?? []),
-                  totalOverride: widget.total,
-                );
-              },
             ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AddNewAddressPage(
-                        customerId: widget.customerId,
-                        email: widget.email,
-                        token: widget.token,
-                        total: widget.total, // pass total
-                        cartProducts: widget.cartProducts, // pass cartProducts
-                        onSuccess: () {},
-                      ),
-                    ),
-                  ).then((_) => _loadAddresses());
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.blue,
-                  foregroundColor: AppColors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text('Add New Address'),
-              ),
+    );
+  }
+
+  // ---------------- BUTTONS ----------------
+
+  Widget _buildAddButton() {
+    return ElevatedButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AddNewAddressPage(
+              customerId: widget.customerId,
+              email: widget.email,
+              token: widget.token,
+              total: widget.total,
+              cartProducts: widget.cartProducts,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _selectedAddressId == null || _isProceeding
-                    ? null
-                    : _proceedToPayment,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.green,
-                  foregroundColor: AppColors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: _isProceeding
-                    ? const CircularProgressIndicator(color: AppColors.white)
-                    : const Text('Proceed to Payment'),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ).then((_) => _loadAddresses());
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.blue,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: const Text("Add Address"),
+    );
+  }
+
+  Widget _buildProceedButton() {
+    return ElevatedButton(
+      onPressed:
+          (_selectedAddressId == null || _isProceeding) ? null : _proceedToPayment,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.green,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: _isProceeding
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                  color: Colors.white, strokeWidth: 2))
+          : const Text("Proceed"),
+    );
+  }
+
+  // ---------------- EMPTY VIEW ----------------
+
+  Widget _buildNoAddressView() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text("No addresses found",
+              style: TextStyle(color: Colors.white)),
+          const SizedBox(height: 10),
+          _buildAddButton(),
+        ],
       ),
     );
   }
