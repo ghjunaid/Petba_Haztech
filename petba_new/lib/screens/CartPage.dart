@@ -5,6 +5,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:petba_new/models/cart.dart';
 import 'package:petba_new/screens/AddNewAddress.dart';
+import 'package:petba_new/screens/AddressListPage.dart';
+import 'package:petba_new/widgets/order_summary.dart';
 
 import '../providers/Config.dart';
 
@@ -247,6 +249,90 @@ class _CartPageState extends State<CartPage> {
     return totalAmount;
   }
 
+  Future<List<dynamic>?> _fetchAddressList() async {
+    try {
+      final response = await http.post(
+        Uri.parse('$apiurl/api/addressList'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'userData': {
+            'customer_id': widget.customerId,
+            'email': widget.email,
+            'token': widget.token,
+          },
+        }),
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final list = data['address'] as List<dynamic>?;
+        return list ?? [];
+      }
+      return [];
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to check addresses'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return null;
+    }
+  }
+
+  Future<void> _handleCheckout() async {
+    if (cartItems.isEmpty) return;
+    final token = widget.token;
+    if (token == null || token.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Login required before checkout.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    final list = await _fetchAddressList();
+    if (list == null) return;
+    if (list.isEmpty) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => AddNewAddressPage(
+            customerId: widget.customerId,
+            email: widget.email,
+            token: token,
+            onSuccess: () async {
+              await fetchCartProducts();
+            },
+          ),
+        ),
+      );
+    } else {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => AddressListPage(
+            customerId: widget.customerId,
+            email: widget.email,
+            token: token,
+            total: finalPayableAmount,
+            cartProducts: cartItems
+                .map(
+                  (ci) => {
+                    'name': ci.name,
+                    'qty': ci.cartQty,
+                    'orig_price': ci.price,
+                    'discounted_price': ci.effectivePrice,
+                  },
+                )
+                .toList(),
+          ),
+        ),
+      );
+    }
+  }
+
   int get itemCount {
     return cartItems.fold(0, (sum, item) => sum + item.cartQty);
   }
@@ -305,34 +391,8 @@ class _CartPageState extends State<CartPage> {
                 ),
               ),
               child: ElevatedButton(
-                onPressed: () {
-                  if (cartItems.isEmpty) {
-                    return;
-                  }
-
-                  final token = widget.token;
-                  if (token == null || token.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Login required before checkout.'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
-
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => AddNewAddressPage(
-                        customerId: widget.customerId,
-                        email: widget.email,
-                        token: token,
-                        onSuccess: () async {
-                          await fetchCartProducts();
-                        },
-                      ),
-                    ),
-                  );
+                onPressed: () async {
+                  await _handleCheckout();
                 },
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -487,176 +547,17 @@ class _CartPageState extends State<CartPage> {
                 // Order Summary Section
                 Container(
                   margin: EdgeInsets.only(top: 24),
-                  width: MediaQuery.of(context).size.width,
-                  padding: EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    top: 12,
-                    bottom: 20,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[50],
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.grey[300]!, width: 1),
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        margin: EdgeInsets.only(bottom: 16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Order Summary',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Price (x items)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Price (${itemCount} item${itemCount > 1 ? 's' : ''})',
-                            style: TextStyle(
-                              color: Colors.grey[700],
-                              fontSize: 13,
-                            ),
-                          ),
-                          Text(
-                            'Rs ${originalPrice.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 10),
-                      // Discount
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Discount',
-                            style: TextStyle(
-                              color: Colors.grey[700],
-                              fontSize: 13,
-                            ),
-                          ),
-                          Text(
-                            '- Rs ${totalDiscount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                      // SizedBox(height: 10),
-                      // Platform Fee
-                      // Row(
-                      //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      //   children: [
-                      //     Text(
-                      //       'Platform Fee',
-                      //       style: TextStyle(
-                      //         color: Colors.grey[700],
-                      //         fontSize: 13,
-                      //       ),
-                      //     ),
-                      //     Text(
-                      //       'Rs ${platformFee.toStringAsFixed(0)}',
-                      //       style: TextStyle(
-                      //         fontWeight: FontWeight.w500,
-                      //         fontSize: 13,
-                      //       ),
-                      //     ),
-                      //   ],
-                      // ),
-                      SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Shipping:',
-                            style: TextStyle(color: Colors.grey[700]),
-                          ),
-                          Text(
-                            'Free',
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 12),
-                      Divider(color: Colors.grey[400], thickness: 1),
-                      SizedBox(height: 12),
-                      // Total Amount
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Total Amount',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                              color: Colors.grey[800],
-                            ),
-                          ),
-                          Text(
-                            'Rs ${finalPayableAmount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                              color: Colors.blue,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 12),
-                      // You'll save message
-                      if (totalDiscount > 0)
-                        Container(
-                          padding: EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.green[50],
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: Colors.green[200]!,
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.local_offer,
-                                size: 16,
-                                color: Colors.green,
-                              ),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'You\'ll save Rs ${totalDiscount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} on this order',
-                                  style: TextStyle(
-                                    color: Colors.green[700],
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
+                  child: OrderSummary(
+                    cartProducts: cartItems
+                        .map(
+                          (ci) => {
+                            'qty': ci.cartQty,
+                            'orig_price': ci.price,
+                            'discounted_price': ci.effectivePrice,
+                          },
+                        )
+                        .toList(),
+                    totalOverride: finalPayableAmount,
                   ),
                 ),
               ],

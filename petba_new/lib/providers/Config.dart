@@ -26,7 +26,7 @@ class AppColors {
 
 // String apiurl = 'http://192.168.0.157:8000'; // Haztech Wifi
 // String apiurl = 'http://10.0.2.2:8000'; // Emulator/Local ip
-String apiurl = 'http://10.252.14.218:8000'; // Local machine IP
+String apiurl = 'http://10.105.235.218:8000'; // Local machine IP
 // String apiurl= 'https://petba.in/petbalaravel/public';
 
 //For chat page

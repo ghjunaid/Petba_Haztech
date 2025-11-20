@@ -103,6 +103,113 @@ class AddressController
     }
 
 
+    public function updateAddress(Request $request)
+    {
+        $data = $request->json()->all();
+        if (empty($data)) { $data = $request->all(); }
+
+        $addressId = $data['address_id'] ?? null;
+        $altPhone  = $data['Altphone'] ?? null;
+        $address   = $data['address'] ?? null;
+        $city      = $data['city'] ?? null;
+        $firstName = $data['first_name'] ?? null;
+        $landmark  = $data['landmark'] ?? null;
+        $company   = $data['company'] ?? null;
+        $customField = $data['custom_field'] ?? null;
+        $lastName  = $data['last_name'] ?? null;
+        $locality  = $data['locality'] ?? null;
+        $phone     = $data['phone'] ?? null;
+        $pincode   = $data['pincode'] ?? null;
+        $email     = $data['email'] ?? null;
+        $token     = $data['token'] ?? null;
+        $userId    = $data['customer_id'] ?? null;
+        $state     = $data['state'] ?? null;
+        $country   = $data['country'] ?? 'India';
+
+        if (!$addressId || !$address || !$city || !$firstName || !$lastName || !$phone || !$pincode || !$email || !$token || !$userId || !$state || !$country) {
+            return response()->json(['error' => 'Missing required fields'], 400);
+        }
+
+        try {
+            $userDetails = $this->internalUserDetails($email);
+            if (!$userDetails) { return response()->json(['error' => 'User not found'], 404); }
+            if ($token !== ($userDetails->token ?? null) || (string)$userId !== (string)($userDetails->customer_id ?? '')) {
+                return response()->json(['error' => 'Invalid token or user ID']);
+            }
+
+            $dup = DB::table('oc_address')
+                ->where('customer_id', $userId)
+                ->where('address_1', $address)
+                ->where('postcode', $pincode)
+                ->where('address_id', '!=', $addressId)
+                ->count();
+            if ($dup > 0) {
+                return response()->json(['address' => 'This address is already added by you']);
+            }
+
+            $zoneId = $this->resolveZoneId($state);
+            $countryId = $this->resolveCountryId($country);
+
+            $updated = DB::table('oc_address')
+                ->where('address_id', $addressId)
+                ->where('customer_id', $userId)
+                ->update([
+                    'company'        => $company ?? '',
+                    'custom_field'   => $customField ?? '',
+                    'firstname'      => $firstName,
+                    'lastname'       => $lastName,
+                    'postcode'       => $pincode,
+                    'zone_id'        => $zoneId,
+                    'country_id'     => $countryId,
+                    'city'           => $city,
+                    'address_1'      => $address,
+                    'address_2'      => $locality,
+                    'shipping_phone' => $phone,
+                    'landmark'       => $landmark,
+                    'alt_number'     => $altPhone,
+                ]);
+
+            if ($updated) {
+                return response()->json(['address' => 'Address updated']);
+            }
+            return response()->json(['error' => 'Address not found or not updated'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function deleteAddress(Request $request)
+    {
+        $userData = $request->input('userData', []);
+        $id = $userData['customer_id'] ?? null;
+        $email = $userData['email'] ?? null;
+        $token = $userData['token'] ?? null;
+        $addressId = $request->input('address_id');
+
+        if (!$id || !$email || !$token || !$addressId) {
+            return response()->json(['error' => 'Missing credentials'], 400);
+        }
+
+        try {
+            $userDetails = internalUserDetails($email);
+            if ($id != $userDetails->customer_id || $token != $userDetails->token) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $deleted = DB::table('oc_address')
+                ->where('address_id', $addressId)
+                ->where('customer_id', $id)
+                ->delete();
+
+            if ($deleted) {
+                return response()->json(['address' => 'Address deleted']);
+            }
+            return response()->json(['error' => 'Address not found'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     // Function to list address
     public function addressList(Request $request)
     {

@@ -4,12 +4,18 @@ import 'package:http/http.dart' as http;
 import 'package:petba_new/models/Validate.dart';
 import 'package:petba_new/models/address.dart';
 import 'package:petba_new/providers/Config.dart';
+import 'package:petba_new/screens/AddressListPage.dart';
 
 class AddNewAddressPage extends StatefulWidget {
   final String customerId;
   final String email;
   final String token;
   final VoidCallback? onSuccess;
+  final Map<String, dynamic>? initialAddress;
+
+  // NEW: accept total and cartProducts so they can be forwarded back
+  final double? total;
+  final List<Map<String, dynamic>>? cartProducts;
 
   const AddNewAddressPage({
     super.key,
@@ -17,6 +23,9 @@ class AddNewAddressPage extends StatefulWidget {
     required this.email,
     required this.token,
     this.onSuccess,
+    this.initialAddress,
+    this.total,
+    this.cartProducts,
   });
 
   @override
@@ -45,11 +54,26 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
 
   String? _selectedCountry = 'India';
   String? _selectedState;
+  String _addressType = 'Home';
 
   @override
   void initState() {
     super.initState();
     _loadCountryData('India');
+    final a = widget.initialAddress;
+    if (a != null) {
+      _firstNameController.text = (a['f_name'] ?? '').toString();
+      _lastNameController.text = (a['l_name'] ?? '').toString();
+      _phoneController.text = (a['shipping_phone'] ?? '').toString();
+      _altPhoneController.text = (a['alt_number'] ?? '').toString();
+      _addressController.text = (a['address'] ?? '').toString();
+      _landmarkController.text = (a['landmark'] ?? '').toString();
+      _pincodeController.text = (a['pin'] ?? '').toString();
+      _cityController.text = (a['city'] ?? '').toString();
+      _localityController.text = (a['address_2'] ?? '').toString();
+      _selectedCountry = (a['country'] ?? 'India').toString();
+      _addressType = (a['custom_field'] ?? 'Home').toString();
+    }
   }
 
   @override
@@ -81,7 +105,7 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
   }
 
   // -----------------------------------------------------------
-  // Load States from Backend (oc_zone)
+  // Load States
   // -----------------------------------------------------------
 
   Future<void> _loadCountryData(String country) async {
@@ -102,9 +126,7 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
         final List<dynamic> states = data['states'] ?? [];
 
         setState(() {
-          _stateOptions = states
-              .map((e) => e['state_name'].toString())
-              .toList();
+          _stateOptions = states.map((e) => e['state_name'].toString()).toList();
         });
       }
     } catch (e) {
@@ -157,18 +179,26 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
           : _landmarkController.text.trim(),
     );
 
-    final payload = json.encode(bodyData.toJson());
+    final Map<String, dynamic> data = bodyData.toJson();
+    data['custom_field'] = _addressType;
+
+    final bool isEdit = widget.initialAddress != null;
+    if (isEdit) {
+      data['address_id'] = widget.initialAddress!['adrs_id'];
+    }
+
+    final endpoint = isEdit ? '$apiurl/api/updateAddress' : '$apiurl/api/addAddress';
+    final payload = json.encode(data);
 
     try {
       final response = await http.post(
-        Uri.parse('$apiurl/api/addAddress'),
+        Uri.parse(endpoint),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
         body: payload,
       );
-      print('Address request: ${(payload)}');
 
       Map<String, dynamic> res = {};
       try {
@@ -178,17 +208,24 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
       }
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        _showMessage(
-          res['address'] ?? res['message'] ?? 'Success',
-          isError: false,
-        );
+        _showMessage(res['message'] ?? 'Success', isError: false);
         widget.onSuccess?.call();
-        Navigator.pop(context, true);
-      } else {
-        _showMessage(
-          res['error'] ?? res['message'] ?? 'Request failed',
-          isError: true,
+
+        // IMPORTANT: pushReplacement back to AddressListPage passing total & cartProducts
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AddressListPage(
+              customerId: widget.customerId,
+              email: widget.email,
+              token: widget.token,
+              total: widget.total, // forward total
+              cartProducts: widget.cartProducts, // forward cartProducts
+            ),
+          ),
         );
+      } else {
+        _showMessage(res['error'] ?? res['message'] ?? 'Request failed', isError: true);
       }
     } catch (e) {
       _showMessage('Failed to add address: $e', isError: true);
@@ -198,7 +235,7 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
   }
 
   // -----------------------------------------------------------
-  // Helpers & UI Components
+  // Helpers
   // -----------------------------------------------------------
 
   void _showMessage(String msg, {required bool isError}) {
@@ -225,104 +262,70 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
   Widget _inlineLoader() => SizedBox(
     width: 20,
     height: 20,
-    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.green),
-  );
-
-  Widget _buildSectionLabel(String text) => Align(
-    alignment: Alignment.centerLeft,
-    child: Text(
-      text,
-      style: const TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w600,
-        color: AppColors.white,
-      ),
-    ),
+    child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.green),
   );
 
   // -----------------------------------------------------------
-  // UI Fields
+  // Address Type Section (TOP)
   // -----------------------------------------------------------
 
-  Widget _buildPincodeField() {
-    return TextFormField(
-      controller: _pincodeController,
-      decoration: _inputDecoration('Pincode', Icons.pin_drop),
-      style: const TextStyle(color: AppColors.white),
-      keyboardType: TextInputType.number,
-      validator: _validatePincode,
-    );
-  }
+  Widget _buildAddressTypeSelector() {
+    final options = [
+      {'label': 'Home', 'icon': Icons.home, 'color': Colors.red},
+      {'label': 'Office', 'icon': Icons.work, 'color': Colors.blue},
+      {'label': 'Other', 'icon': Icons.more_horiz, 'color': Colors.green},
+    ];
 
-  Widget _buildCityField() {
-    return TextFormField(
-      controller: _cityController,
-      decoration: _inputDecoration('City', Icons.location_city),
-      style: const TextStyle(color: AppColors.white),
-      validator: (value) =>
-          value == null || value.trim().isEmpty ? 'Please enter a city' : null,
-    );
-  }
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: options.map((opt) {
+        final isSelected = _addressType == opt['label'];
 
-  Widget _buildLocalityField() {
-    return TextFormField(
-      controller: _localityController,
-      decoration: _inputDecoration('Locality', Icons.location_searching),
-      style: const TextStyle(color: AppColors.white),
-      validator: (value) => value == null || value.trim().isEmpty
-          ? 'Please enter a Locality'
-          : null,
-    );
-  }
-
-  Widget _buildCountryDropdown() {
-    return DropdownButtonFormField<String>(
-      value: _selectedCountry,
-      decoration: _inputDecoration('Country', Icons.public).copyWith(
-        suffixIcon: _isLoadingCountryData
-            ? Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: _inlineLoader(),
-              )
-            : null,
-      ),
-      items: _countryOptions
-          .map((c) => DropdownMenuItem<String>(value: c, child: Text(c)))
-          .toList(),
-      onChanged: (value) {
-        _selectedCountry = value;
-        _selectedState = null;
-        _loadCountryData(value!);
-      },
-      validator: (v) => v == null ? 'Select country' : null,
-      dropdownColor: AppColors.primaryColor,
-      style: const TextStyle(color: AppColors.white),
-    );
-  }
-
-  Widget _buildStateDropdown() {
-    return DropdownButtonFormField<String>(
-      value: _selectedState,
-      decoration: _inputDecoration('State', Icons.map).copyWith(
-        suffixIcon: _isLoadingStates
-            ? Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: _inlineLoader(),
-              )
-            : null,
-      ),
-      items: _stateOptions
-          .map((s) => DropdownMenuItem<String>(value: s, child: Text(s)))
-          .toList(),
-      onChanged: (value) => setState(() => _selectedState = value),
-      validator: (v) => v == null ? 'Select state' : null,
-      dropdownColor: AppColors.primaryColor,
-      style: const TextStyle(color: AppColors.white),
+        return GestureDetector(
+          onTap: () => setState(() => _addressType = opt['label'] as String),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected
+                      ? (opt['color'] as Color).withOpacity(0.2)
+                      : Colors.grey.withOpacity(0.2),
+                  border: Border.all(
+                    color: isSelected
+                        ? opt['color'] as Color
+                        : Colors.grey.shade500,
+                    width: 2,
+                  ),
+                ),
+                child: Icon(
+                  opt['icon'] as IconData,
+                  size: 28,
+                  color: isSelected
+                      ? opt['color'] as Color
+                      : Colors.grey.shade400,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                opt['label'] as String,
+                style: TextStyle(
+                  color: isSelected
+                      ? opt['color'] as Color
+                      : Colors.grey.shade400,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
     );
   }
 
   // -----------------------------------------------------------
-  // Main Form Card UI
+  // Form Card
   // -----------------------------------------------------------
 
   Widget _buildFormCard() {
@@ -334,23 +337,118 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            _buildSectionLabel('Location details'),
+            // Location details
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Location details',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.white,
+                ),
+              ),
+            ),
             const SizedBox(height: 12),
-            _buildPincodeField(),
+            TextFormField(
+              controller: _pincodeController,
+              decoration: _inputDecoration('Pincode', Icons.pin_drop),
+              style: const TextStyle(color: AppColors.white),
+              keyboardType: TextInputType.number,
+              validator: _validatePincode,
+            ),
             const SizedBox(height: 16),
-            _buildCountryDropdown(),
+
+            // Country dropdown
+            DropdownButtonFormField<String>(
+              value: _selectedCountry,
+              decoration: _inputDecoration('Country', Icons.public).copyWith(
+                suffixIcon: _isLoadingCountryData
+                    ? Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: _inlineLoader(),
+                      )
+                    : null,
+              ),
+              items: _countryOptions
+                  .map((c) =>
+                      DropdownMenuItem<String>(value: c, child: Text(c)))
+                  .toList(),
+              onChanged: (value) {
+                _selectedCountry = value;
+                _selectedState = null;
+                _loadCountryData(value!);
+              },
+              validator: (v) => v == null ? 'Select country' : null,
+              dropdownColor: AppColors.primaryColor,
+              style: const TextStyle(color: AppColors.white),
+            ),
             const SizedBox(height: 16),
-            _buildStateDropdown(),
+
+            // State dropdown
+            DropdownButtonFormField<String>(
+              value: _selectedState,
+              decoration: _inputDecoration('State', Icons.map).copyWith(
+                suffixIcon: _isLoadingStates
+                    ? Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: _inlineLoader(),
+                      )
+                    : null,
+              ),
+              items: _stateOptions
+                  .map((s) =>
+                      DropdownMenuItem<String>(value: s, child: Text(s)))
+                  .toList(),
+              onChanged: (value) => setState(() => _selectedState = value),
+              validator: (v) => v == null ? 'Select state' : null,
+              dropdownColor: AppColors.primaryColor,
+              style: const TextStyle(color: AppColors.white),
+            ),
             const SizedBox(height: 16),
-            _buildCityField(),
+
+            // City
+            TextFormField(
+              controller: _cityController,
+              decoration: _inputDecoration('City', Icons.location_city),
+              style: const TextStyle(color: AppColors.white),
+              validator: (value) =>
+                  value == null || value.trim().isEmpty
+                      ? 'Please enter a city'
+                      : null,
+            ),
             const SizedBox(height: 16),
-            _buildLocalityField(),
+
+            // Locality
+            TextFormField(
+              controller: _localityController,
+              decoration:
+                  _inputDecoration('Locality', Icons.location_searching),
+              style: const TextStyle(color: AppColors.white),
+              validator: (value) => value == null || value.trim().isEmpty
+                  ? 'Please enter a Locality'
+                  : null,
+            ),
 
             const SizedBox(height: 24),
             Divider(color: Colors.grey.shade800),
             const SizedBox(height: 24),
 
-            _buildSectionLabel('Contact & address'),
+            // ---------------------------------------
+            // Contact & Address
+            // ---------------------------------------
+
+            Align(
+              alignment: Alignment.centerLeft,
+              child: const Text(
+                'Contact & address',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.white,
+                ),
+              ),
+            ),
             const SizedBox(height: 12),
 
             Row(
@@ -358,7 +456,8 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
                 Expanded(
                   child: TextFormField(
                     controller: _firstNameController,
-                    decoration: _inputDecoration('First name', Icons.person),
+                    decoration:
+                        _inputDecoration('First name', Icons.person),
                     style: const TextStyle(color: AppColors.white),
                     validator: Validators.validateName,
                   ),
@@ -379,6 +478,7 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
             ),
 
             const SizedBox(height: 16),
+
             TextFormField(
               controller: _phoneController,
               decoration: _inputDecoration('Phone number', Icons.phone),
@@ -387,6 +487,7 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
               validator: Validators.validatePhoneNumber,
             ),
             const SizedBox(height: 16),
+
             TextFormField(
               controller: _altPhoneController,
               decoration: _inputDecoration(
@@ -402,8 +503,8 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
                 return null;
               },
             ),
-
             const SizedBox(height: 16),
+
             TextFormField(
               controller: _addressController,
               decoration: _inputDecoration('Address', Icons.location_on),
@@ -411,15 +512,16 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
               maxLines: 3,
               validator: Validators.validateAddress,
             ),
-
             const SizedBox(height: 16),
+
             TextFormField(
               controller: _landmarkController,
               decoration: _inputDecoration('Landmark', Icons.place),
               style: const TextStyle(color: AppColors.white),
-              validator: (value) => value == null || value.trim().isEmpty
-                  ? 'Please enter a landmark'
-                  : null,
+              validator: (v) =>
+                  v == null || v.trim().isEmpty
+                      ? 'Please enter a landmark'
+                      : null,
             ),
           ],
         ),
@@ -428,7 +530,7 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
   }
 
   // -----------------------------------------------------------
-  // Save Button
+  // Save button
   // -----------------------------------------------------------
 
   Widget _buildSubmitButton() {
@@ -488,11 +590,27 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
             key: _formKey,
             child: Column(
               children: [
-                Text(
-                  'Fill in the details below to add a new delivery address.',
-                  style: TextStyle(color: Colors.grey.shade300),
+                // ---------------------------------------------
+                // Address Type (on top) — YOUR REQUIREMENT
+                // ---------------------------------------------
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Address type',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.white,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
+                _buildAddressTypeSelector(),
+                const SizedBox(height: 30),
+
+                // ---------------------------------------------
+                // Main Form Card
+                // ---------------------------------------------
                 _buildFormCard(),
                 const SizedBox(height: 24),
                 _buildSubmitButton(),
