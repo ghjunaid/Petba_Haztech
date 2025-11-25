@@ -34,6 +34,16 @@ class _CartPageState extends State<CartPage> {
   bool isLoading = true;
   String errorMessage = '';
 
+  ThemeData get _theme => Theme.of(context);
+  ColorScheme get _colorScheme => _theme.colorScheme;
+  Color get _backgroundColor => _theme.scaffoldBackgroundColor;
+  Color get _surfaceColor => _theme.cardColor;
+  Color get _textPrimary => _colorScheme.onSurface;
+  Color get _primaryAccent => _colorScheme.primary;
+  Color get _secondaryAccent => _colorScheme.secondary;
+  Color get _errorColor => _colorScheme.error;
+  Color get _onPrimary => _colorScheme.onPrimary;
+
   @override
   void initState() {
     super.initState();
@@ -147,7 +157,7 @@ class _CartPageState extends State<CartPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to update quantity'),
-          backgroundColor: Colors.red,
+          backgroundColor: _errorColor,
         ),
       );
       await fetchCartProducts();
@@ -177,7 +187,7 @@ class _CartPageState extends State<CartPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Item removed'),
-            backgroundColor: Colors.green,
+            backgroundColor: _secondaryAccent,
           ),
         );
       }
@@ -185,7 +195,7 @@ class _CartPageState extends State<CartPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error removing item'),
-          backgroundColor: Colors.red,
+          backgroundColor: _errorColor,
         ),
       );
     }
@@ -280,21 +290,26 @@ class _CartPageState extends State<CartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primaryDark,
+      backgroundColor: _backgroundColor,
 
       appBar: AppBar(
-        backgroundColor: AppColors.primaryDark,
+        backgroundColor: _surfaceColor,
         elevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.light,
+        // Make status bar icons adapt to the current theme brightness
+        systemOverlayStyle: Theme.of(context).brightness == Brightness.dark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
         centerTitle: true,
         title: Text(
           'Your Cart',
-          style: TextStyle(color: Colors.white, fontSize: 16),
+          style: TextStyle(color: _textPrimary, fontSize: 16),
         ),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: _primaryAccent),
           onPressed: () => Navigator.pop(context),
         ),
+        iconTheme: IconThemeData(color: _primaryAccent),
+        titleTextStyle: TextStyle(color: _textPrimary, fontSize: 16),
       ),
 
       // 🔥 DARK STEPPER (ACTIVE STEP = 1)
@@ -304,19 +319,21 @@ class _CartPageState extends State<CartPage> {
 
           Expanded(
             child: isLoading
-                ? Center(child: CircularProgressIndicator(color: Colors.blue))
+                ? Center(
+                    child: CircularProgressIndicator(color: _primaryAccent),
+                  )
                 : errorMessage.isNotEmpty
                 ? Center(
                     child: Text(
                       errorMessage,
-                      style: TextStyle(color: Colors.red),
+                      style: TextStyle(color: _errorColor),
                     ),
                   )
                 : cartItems.isEmpty
                 ? Center(
                     child: Text(
                       "Your cart is empty",
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: _textPrimary),
                     ),
                   )
                 : ListView(
@@ -370,12 +387,12 @@ class _CartPageState extends State<CartPage> {
           ? null
           : Container(
               padding: EdgeInsets.all(16),
-              color: AppColors.primaryDark,
+              color: _surfaceColor,
               child: ElevatedButton(
                 onPressed: _handleCheckout,
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.blue,
+                  backgroundColor: _primaryAccent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -386,7 +403,7 @@ class _CartPageState extends State<CartPage> {
                     Text(
                       "Checkout  •  ",
                       style: TextStyle(
-                        color: Colors.white,
+                        color: _onPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -394,7 +411,7 @@ class _CartPageState extends State<CartPage> {
                     Text(
                       "₹ ${finalPayableAmount.toStringAsFixed(0)}",
                       style: TextStyle(
-                        color: Colors.white,
+                        color: _onPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
@@ -424,12 +441,23 @@ class CartTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final surfaceColor = theme.cardColor;
+    final borderColor = theme.dividerColor;
+    final textPrimary = colorScheme.onSurface;
+    final textSecondary = colorScheme.onSurfaceVariant;
+    final primaryAccent = colorScheme.primary;
+    final surfaceVariant = colorScheme.surfaceVariant;
+    final onPrimary = colorScheme.onPrimary;
+    final errorColor = colorScheme.error;
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: borderColor),
       ),
       child: Row(
         children: [
@@ -439,7 +467,7 @@ class CartTile extends StatelessWidget {
             height: 100,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-              color: Colors.grey[100],
+              color: surfaceVariant,
             ),
             clipBehavior: Clip.hardEdge,
             child: data.image.isNotEmpty
@@ -467,23 +495,22 @@ class CartTile extends StatelessWidget {
                       return Image.network(
                         finalUrl,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(
-                              Icons.image_not_supported,
-                              size: 40,
-                              color: Colors.grey,
-                            ),
+                        errorBuilder: (context, error, stackTrace) => Icon(
+                          Icons.image_not_supported,
+                          size: 40,
+                          color: textSecondary,
+                        ),
                       );
                     },
                   )
-                : const Icon(
+                : Icon(
                     Icons.image_not_supported,
                     size: 40,
-                    color: Colors.grey,
+                    color: textSecondary,
                   ),
           ),
 
-          const SizedBox(width: 14),
+          SizedBox(width: 14),
 
           // PRODUCT DETAILS
           Expanded(
@@ -492,32 +519,33 @@ class CartTile extends StatelessWidget {
               children: [
                 Text(
                   data.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
+                    color: textPrimary,
                   ),
                 ),
 
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
 
                 Row(
                   children: [
                     Text(
                       "₹${data.effectivePrice}",
-                      style: const TextStyle(
-                        color: Colors.blue,
+                      style: TextStyle(
+                        color: primaryAccent,
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),
                     ),
                     if (data.price > data.effectivePrice)
                       Padding(
-                        padding: const EdgeInsets.only(left: 8),
+                        padding: EdgeInsets.only(left: 8),
                         child: Text(
                           "₹${data.price}",
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey,
+                            color: textSecondary,
                             decoration: TextDecoration.lineThrough,
                           ),
                         ),
@@ -525,7 +553,7 @@ class CartTile extends StatelessWidget {
                   ],
                 ),
 
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
 
                 Row(
                   children: [
@@ -541,10 +569,10 @@ class CartTile extends StatelessWidget {
                         height: 30,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: Colors.grey[300],
+                          color: surfaceVariant,
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Icon(Icons.remove, size: 18),
+                        child: Icon(Icons.remove, size: 18, color: textPrimary),
                       ),
                     ),
 
@@ -554,9 +582,10 @@ class CartTile extends StatelessWidget {
                       alignment: Alignment.center,
                       child: Text(
                         '${data.cartQty}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
+                          color: textPrimary,
                         ),
                       ),
                     ),
@@ -569,26 +598,19 @@ class CartTile extends StatelessWidget {
                         height: 30,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: Colors.blue,
+                          color: primaryAccent,
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Icon(
-                          Icons.add,
-                          size: 18,
-                          color: Colors.white,
-                        ),
+                        child: Icon(Icons.add, size: 18, color: onPrimary),
                       ),
                     ),
 
-                    const Spacer(),
+                    Spacer(),
 
                     // Remove icon
                     GestureDetector(
                       onTap: onRemove,
-                      child: const Icon(
-                        Icons.delete_outline,
-                        color: Colors.red,
-                      ),
+                      child: Icon(Icons.delete_outline, color: errorColor),
                     ),
                   ],
                 ),

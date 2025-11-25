@@ -9,7 +9,11 @@ class StepHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final steps = ['Cart', 'Address', 'Payment', 'Order Placed'];
-    final Color blue = const Color(0xFF3F51B5);
+    final theme = Theme.of(context);
+    final Color blue = theme.colorScheme.primary;
+    final Color onBlue = theme.colorScheme.onPrimary;
+    final Color onSurface = theme.colorScheme.onSurface;
+    final Color inactiveCircle = theme.dividerColor;
 
     Widget circle(int index) {
       bool isCompleted = index < activeStep - 1;
@@ -20,7 +24,7 @@ class StepHeader extends StatelessWidget {
           width: 28,
           height: 28,
           decoration: BoxDecoration(color: blue, shape: BoxShape.circle),
-          child: const Icon(Icons.check, color: Colors.white, size: 16),
+          child: Icon(Icons.check, color: onBlue, size: 16),
         );
       }
 
@@ -32,10 +36,7 @@ class StepHeader extends StatelessWidget {
           alignment: Alignment.center,
           child: Text(
             "${index + 1}",
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: onBlue, fontWeight: FontWeight.bold),
           ),
         );
       }
@@ -43,28 +44,24 @@ class StepHeader extends StatelessWidget {
       return Container(
         width: 28,
         height: 28,
-        decoration:
-            BoxDecoration(color: Colors.grey.shade600, shape: BoxShape.circle),
-        alignment: Alignment.center,
-        child: Text(
-          "${index + 1}",
-          style: const TextStyle(color: Colors.black),
+        decoration: BoxDecoration(
+          color: inactiveCircle,
+          shape: BoxShape.circle,
         ),
+        alignment: Alignment.center,
+        child: Text("${index + 1}", style: TextStyle(color: onSurface)),
       );
     }
 
     Widget line(bool active) {
       return Expanded(
-        child: Container(
-          height: 2,
-          color: active ? Colors.grey : Colors.grey.shade800,
-        ),
+        child: Container(height: 2, color: active ? blue : theme.dividerColor),
       );
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-      color: AppColors.primaryDark,
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: Column(
         children: [
           Row(
@@ -87,9 +84,9 @@ class StepHeader extends StatelessWidget {
                     child: Text(
                       t,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: Colors.white,
+                        color: onSurface,
                         fontWeight: FontWeight.w500,
                       ),
                     ),

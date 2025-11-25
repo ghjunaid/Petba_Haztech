@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:petba_new/theme/app_color.dart';
 
 // // The primary colour
 // Color kThemeColour = Color(0xff253150);
@@ -8,26 +9,33 @@ import 'package:flutter/material.dart';
 // Color kShimmerColor = Colors.grey[100]!;
 
 class AppColors {
-  // Main theme colors
-  static const Color primaryColor = Color(0xFF2d2d2d);
-  static const Color primaryDark = Color(0xFF1a1a1a);
+  static ThemeData get _theme {
+    // Prefer the navigator state's context (more stable during rebuilds),
+    // fall back to the global currentContext. If both are null return a
+    // light ThemeData as a safe default to avoid transient inverted colors
+    // when the app is rebuilding the MaterialApp/theme.
+    final context =
+        appNavigatorKey.currentState?.context ?? appNavigatorKey.currentContext;
+    return context != null ? Theme.of(context) : ThemeData.light();
+  }
 
-  // You can also define other common colors
-  static const Color white = Colors.white;
-  static const Color black = Colors.black;
-  static const Color grey = Colors.grey;
-  static const Color blue = Colors.blue;
-  static const Color red = Colors.red;
-  static const Color green = Colors.green;
+  static ColorScheme get _scheme => _theme.colorScheme;
 
-  // Example for transparency variants
-  static Color primaryLight = Color(0xFF2d2d2d).withOpacity(0.7);
+  static Color get primaryColor => _theme.cardColor;
+  static Color get primaryDark => _theme.scaffoldBackgroundColor;
+  static Color get white => _scheme.onSurface;
+  static Color get black => Colors.black;
+  static Color get grey => _scheme.onSurfaceVariant;
+  static Color get blue => _scheme.primary;
+  static Color get red => _scheme.error;
+  static Color get green => _scheme.secondary;
+  static Color get primaryLight => primaryColor.withOpacity(0.7);
 }
 
 // String apiurl = 'http://192.168.0.157:8000'; // Haztech Wifi
 // String apiurl = 'http://10.0.2.2:8000'; // Emulator/Local ip
-String apiurl = 'http://10.105.235.218:8000'; // Local machine IP
-// String apiurl= 'https://petba.in/petbalaravel/public';
+// String apiurl = 'http://10.105.235.218:8000'; // Local machine IP
+String apiurl = 'https://petba.in/petbalaravel/public';
 
 //For chat page
 const String baseUrl = 'http://192.168.0.157:8000';

@@ -97,7 +97,8 @@ class _AddressListPageState extends State<AddressListPage> {
     final alt = a['alt_number'] ?? '';
     final type = a['custom_field'] ?? '';
 
-    final typeColor = {
+    final typeColor =
+        {
           'Home': Colors.red,
           'Office': Colors.blue,
           'Other': Colors.green,
@@ -132,39 +133,62 @@ class _AddressListPageState extends State<AddressListPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(name,
-                            style: const TextStyle(
-                                color: AppColors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13)),
+                        Text(
+                          name,
+                          style: TextStyle(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
 
-                        const SizedBox(height: 2),
+                        SizedBox(height: 2),
 
-                        Text(address1,
-                            style: const TextStyle(
-                                color: AppColors.white, fontSize: 12)),
+                        Text(
+                          address1,
+                          style: TextStyle(
+                            color: AppColors.white,
+                            fontSize: 12,
+                          ),
+                        ),
 
                         if (address2.toString().isNotEmpty)
-                          Text(address2,
-                              style: const TextStyle(
-                                  color: AppColors.white, fontSize: 12)),
+                          Text(
+                            address2,
+                            style: TextStyle(
+                              color: AppColors.white,
+                              fontSize: 12,
+                            ),
+                          ),
 
-                        const SizedBox(height: 2),
+                        SizedBox(height: 2),
 
-                        Text("$city - $pin",
-                            style: const TextStyle(
-                                color: AppColors.white, fontSize: 12)),
+                        Text(
+                          "$city - $pin",
+                          style: TextStyle(
+                            color: AppColors.white,
+                            fontSize: 12,
+                          ),
+                        ),
 
-                        Text(country,
-                            style: const TextStyle(
-                                color: AppColors.white, fontSize: 12)),
+                        Text(
+                          country,
+                          style: TextStyle(
+                            color: AppColors.white,
+                            fontSize: 12,
+                          ),
+                        ),
 
                         if (landmark.toString().isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 2),
-                            child: Text("Landmark: $landmark",
-                                style: const TextStyle(
-                                    color: Colors.grey, fontSize: 11)),
+                            child: Text(
+                              "Landmark: $landmark",
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 11,
+                              ),
+                            ),
                           ),
                       ],
                     ),
@@ -172,8 +196,10 @@ class _AddressListPageState extends State<AddressListPage> {
 
                   // TYPE BADGE (RIGHT)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: typeColor.withOpacity(0.18),
                       borderRadius: BorderRadius.circular(20),
@@ -191,7 +217,7 @@ class _AddressListPageState extends State<AddressListPage> {
                 ],
               ),
 
-              const SizedBox(height: 10),
+              SizedBox(height: 10),
 
               // ---------------- PHONE + EDIT + DELETE ----------------
               Row(
@@ -199,14 +225,16 @@ class _AddressListPageState extends State<AddressListPage> {
                   Expanded(
                     child: Row(
                       children: [
-                        Text("Phone: $phone",
-                            style: const TextStyle(
-                                color: Colors.grey, fontSize: 11)),
+                        Text(
+                          "Phone: $phone",
+                          style: TextStyle(color: Colors.grey, fontSize: 11),
+                        ),
                         if (alt.toString().isNotEmpty) ...[
-                          const SizedBox(width: 6),
-                          Text("Alt: $alt",
-                              style: const TextStyle(
-                                  color: Colors.grey, fontSize: 11)),
+                          SizedBox(width: 6),
+                          Text(
+                            "Alt: $alt",
+                            style: TextStyle(color: Colors.grey, fontSize: 11),
+                          ),
                         ],
                       ],
                     ),
@@ -230,19 +258,17 @@ class _AddressListPageState extends State<AddressListPage> {
                         ),
                       ).then((_) => _loadAddresses());
                     },
-                    child:
-                        const Icon(Icons.edit, color: AppColors.blue, size: 19),
+                    child: Icon(Icons.edit, color: AppColors.blue, size: 19),
                   ),
 
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
 
                   // DELETE (EXTREME RIGHT)
                   InkWell(
                     onTap: () => _deleteAddress(id),
-                    child: const Padding(
+                    child: Padding(
                       padding: EdgeInsets.only(right: 2),
-                      child:
-                          Icon(Icons.delete, size: 22, color: AppColors.red),
+                      child: Icon(Icons.delete, size: 22, color: AppColors.red),
                     ),
                   ),
                 ],
@@ -277,20 +303,29 @@ class _AddressListPageState extends State<AddressListPage> {
 
       if (response.statusCode == 200) {
         setState(() {
-          _addresses.removeWhere((a) =>
-              int.tryParse(a['adrs_id']?.toString() ?? "") == id);
+          _addresses.removeWhere(
+            (a) => int.tryParse(a['adrs_id']?.toString() ?? "") == id,
+          );
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
             content: Text("Address deleted"),
-            backgroundColor: AppColors.green));
+            backgroundColor: AppColors.green,
+          ),
+        );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("Failed to delete"), backgroundColor: AppColors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to delete"),
+            backgroundColor: AppColors.red,
+          ),
+        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Error: $e"), backgroundColor: AppColors.red));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e"), backgroundColor: AppColors.red),
+      );
     }
   }
 
@@ -327,16 +362,24 @@ class _AddressListPageState extends State<AddressListPage> {
       );
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
             content: Text("Redirecting to payment"),
-            backgroundColor: AppColors.green));
+            backgroundColor: AppColors.green,
+          ),
+        );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("Payment failed"), backgroundColor: AppColors.red));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Payment failed"),
+            backgroundColor: AppColors.red,
+          ),
+        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Error: $e"), backgroundColor: AppColors.red));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e"), backgroundColor: AppColors.red),
+      );
     } finally {
       setState(() => _isProceeding = false);
     }
@@ -355,47 +398,49 @@ class _AddressListPageState extends State<AddressListPage> {
         backgroundColor: AppColors.primaryDark,
         elevation: 0,
         centerTitle: true,
-        title: const Text("Select Address",
-            style: TextStyle(color: Colors.white)),
+        title: Text("Select Address", style: TextStyle(color: Colors.white)),
       ),
 
       body: Column(
         children: [
           // 🔥 SHARED STEPPER (Active step = 2)
-          const StepHeader(activeStep: 2),
+          StepHeader(activeStep: 2),
 
           Expanded(
             child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.green))
+                ? Center(
+                    child: CircularProgressIndicator(color: AppColors.green),
+                  )
                 : _error != null
-                    ? Center(
-                        child: Text(_error!,
-                            style:
-                                const TextStyle(color: AppColors.white)))
-                    : _addresses.isEmpty
-                        ? _buildNoAddressView()
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _addresses.length + 1,
-                            itemBuilder: (context, index) {
-                              if (index < _addresses.length) {
-                                return Column(
-                                  children: [
-                                    _buildAddressTile(
-                                        _addresses[index]
-                                            as Map<String, dynamic>),
-                                    const SizedBox(height: 12),
-                                  ],
-                                );
-                              }
+                ? Center(
+                    child: Text(
+                      _error!,
+                      style: TextStyle(color: AppColors.white),
+                    ),
+                  )
+                : _addresses.isEmpty
+                ? _buildNoAddressView()
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _addresses.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index < _addresses.length) {
+                        return Column(
+                          children: [
+                            _buildAddressTile(
+                              _addresses[index] as Map<String, dynamic>,
+                            ),
+                            SizedBox(height: 12),
+                          ],
+                        );
+                      }
 
-                              return OrderSummary(
-                                cartProducts: widget.cartProducts ?? [],
-                                totalOverride: widget.total,
-                              );
-                            },
-                          ),
+                      return OrderSummary(
+                        cartProducts: widget.cartProducts ?? [],
+                        totalOverride: widget.total,
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -406,13 +451,9 @@ class _AddressListPageState extends State<AddressListPage> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Expanded(
-                    child: _buildAddButton(),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildProceedButton(),
-                  ),
+                  Expanded(child: _buildAddButton()),
+                  SizedBox(width: 12),
+                  Expanded(child: _buildProceedButton()),
                 ],
               ),
             ),
@@ -442,26 +483,30 @@ class _AddressListPageState extends State<AddressListPage> {
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      child: const Text("Add Address"),
+      child: Text("Add Address"),
     );
   }
 
   Widget _buildProceedButton() {
     return ElevatedButton(
-      onPressed:
-          (_selectedAddressId == null || _isProceeding) ? null : _proceedToPayment,
+      onPressed: (_selectedAddressId == null || _isProceeding)
+          ? null
+          : _proceedToPayment,
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.green,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       child: _isProceeding
-          ? const SizedBox(
+          ? SizedBox(
               width: 18,
               height: 18,
               child: CircularProgressIndicator(
-                  color: Colors.white, strokeWidth: 2))
-          : const Text("Proceed"),
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            )
+          : Text("Proceed"),
     );
   }
 
@@ -472,9 +517,8 @@ class _AddressListPageState extends State<AddressListPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text("No addresses found",
-              style: TextStyle(color: Colors.white)),
-          const SizedBox(height: 10),
+          Text("No addresses found", style: TextStyle(color: Colors.white)),
+          SizedBox(height: 10),
           _buildAddButton(),
         ],
       ),

@@ -101,8 +101,10 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
     // Validate required parameters
     if (widget.customerId.isEmpty || widget.email.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showMessage('Invalid user session. Please login again.',
-            isError: true);
+        _showMessage(
+          'Invalid user session. Please login again.',
+          isError: true,
+        );
         Navigator.pop(context);
       });
       return;
@@ -112,8 +114,9 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
     if (widget.token == null || widget.token!.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showMessage(
-            'Warning: Authentication token is missing. Some features may not work properly.',
-            isError: true);
+          'Warning: Authentication token is missing. Some features may not work properly.',
+          isError: true,
+        );
       });
     }
 
@@ -229,13 +232,13 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
 
       // FIXED: Set animal ID first, then wait for breeds to load
       if (petData['animal'] != null || petData['animal_id'] != null) {
-        String animalId =
-        (petData['animal'] ?? petData['animal_id']).toString();
+        String animalId = (petData['animal'] ?? petData['animal_id'])
+            .toString();
         print('Looking for animal with ID: $animalId');
 
         // Find the animal in our loaded animals list
         var foundAnimal = _animals.firstWhere(
-              (animal) => animal['animal_id'].toString() == animalId,
+          (animal) => animal['animal_id'].toString() == animalId,
           orElse: () => <String, dynamic>{},
         );
 
@@ -250,12 +253,12 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
 
           // FIXED: Set breed ID after breeds are loaded
           if (petData['breed'] != null || petData['breed_id'] != null) {
-            String breedId =
-            (petData['breed'] ?? petData['breed_id']).toString();
+            String breedId = (petData['breed'] ?? petData['breed_id'])
+                .toString();
             print('Looking for breed with ID: $breedId');
 
             var foundBreed = _breeds.firstWhere(
-                  (breed) => breed['id'].toString() == breedId,
+              (breed) => breed['id'].toString() == breedId,
               orElse: () => <String, dynamic>{},
             );
 
@@ -267,13 +270,15 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
             } else {
               print('Breed not found in loaded breeds: $breedId');
               print(
-                  'Available breeds: ${_breeds.map((b) => "${b['id']}: ${b['name']}").toList()}');
+                'Available breeds: ${_breeds.map((b) => "${b['id']}: ${b['name']}").toList()}',
+              );
             }
           }
         } else {
           print('Animal not found in loaded animals: $animalId');
           print(
-              'Available animals: ${_animals.map((a) => "${a['animal_id']}: ${a['name']}").toList()}');
+            'Available animals: ${_animals.map((a) => "${a['animal_id']}: ${a['name']}").toList()}',
+          );
         }
       }
 
@@ -284,14 +289,17 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         _animalNameController.text = petData['animalName'].toString();
         print('Set animal type: ${petData['animalName']}');
       } else if (_selectedAnimalId == '0' ||
-          (_animals.any((animal) =>
-          animal['animal_id'].toString() == _selectedAnimalId &&
-              animal['name']?.toLowerCase() == 'other'))) {
+          (_animals.any(
+            (animal) =>
+                animal['animal_id'].toString() == _selectedAnimalId &&
+                animal['name']?.toLowerCase() == 'other',
+          ))) {
         // If animal type is "Other" but no custom name provided, leave the field empty
         // so user can enter their custom animal name
         _animalNameController.clear();
         print(
-            'Animal type is Other - cleared custom name field for user input');
+          'Animal type is Other - cleared custom name field for user input',
+        );
       }
 
       // Set breed name if custom - FIXED VERSION
@@ -301,24 +309,28 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         _breedNameController.text = petData['breedName'].toString();
         print('Set breed name: ${petData['breedName']}');
       } else if (_selectedBreedId == '0' ||
-          (_breeds.any((breed) =>
-          breed['id'].toString() == _selectedBreedId &&
-              breed['name']?.toLowerCase() == 'other'))) {
+          (_breeds.any(
+            (breed) =>
+                breed['id'].toString() == _selectedBreedId &&
+                breed['name']?.toLowerCase() == 'other',
+          ))) {
         // If breed type is "Other" but no custom name provided, leave the field empty
         _breedNameController.clear();
         print(
-            'Breed type is Other - cleared custom breed field for user input');
+          'Breed type is Other - cleared custom breed field for user input',
+        );
       }
 
       // FIXED: Set color ID
       if (petData['color'] != null || petData['color_id'] != null) {
         try {
-          int colorId =
-          int.parse((petData['color'] ?? petData['color_id']).toString());
+          int colorId = int.parse(
+            (petData['color'] ?? petData['color_id']).toString(),
+          );
           print('Looking for color with ID: $colorId');
 
           var foundColor = _colors.firstWhere(
-                (color) => color['id'] == colorId,
+            (color) => color['id'] == colorId,
             orElse: () => <String, dynamic>{},
           );
 
@@ -330,7 +342,8 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
           } else {
             print('Color not found in loaded colors: $colorId');
             print(
-                'Available colors: ${_colors.map((c) => "${c['id']}: ${c['color']}").toList()}');
+              'Available colors: ${_colors.map((c) => "${c['id']}: ${c['color']}").toList()}',
+            );
           }
         } catch (e) {
           print('Error parsing color ID: $e');
@@ -347,21 +360,23 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
           print('Looking for city with ID: $cityId');
 
           var foundCity = _cities.firstWhere(
-                (city) => city['city_id'].toString() == cityId,
+            (city) => city['city_id'].toString() == cityId,
             orElse: () => <String, dynamic>{},
           );
 
           if (foundCity.isNotEmpty) {
             setState(() {
               _selectedCityId = cityId;
-              _selectedCityName = foundCity['city_name']?.toString() ??
+              _selectedCityName =
+                  foundCity['city_name']?.toString() ??
                   petData['city']?.toString();
             });
             print('Set city ID: $cityId, name: $_selectedCityName');
           } else {
             print('City not found in loaded cities: $cityId');
             print(
-                'Available cities: ${_cities.map((c) => "${c['city_id']}: ${c['city_name']}").toList()}');
+              'Available cities: ${_cities.map((c) => "${c['city_id']}: ${c['city_name']}").toList()}',
+            );
           }
         }
       }
@@ -390,10 +405,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
   // Load initial data from APIs
   Future<void> _loadInitialData() async {
     print('Loading initial data...');
-    await Future.wait([
-      _loadColors(),
-      _loadAnimals(),
-    ]);
+    await Future.wait([_loadColors(), _loadAnimals()]);
     print('Initial data loaded');
   }
 
@@ -419,10 +431,12 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         });
         print('Colors loaded: ${_colors.length}');
         print(
-            'Colors data: ${_colors.map((c) => "${c['id']}: ${c['color']}").toList()}');
+          'Colors data: ${_colors.map((c) => "${c['id']}: ${c['color']}").toList()}',
+        );
       } else {
         throw Exception(
-            'Failed to load colors - Status: ${response.statusCode}');
+          'Failed to load colors - Status: ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Error loading colors: $e');
@@ -460,7 +474,8 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         });
         print('Animals loaded: ${_animals.length}');
         print(
-            'Animals data: ${_animals.map((a) => "${a['animal_id']}: ${a['name']}").toList()}');
+          'Animals data: ${_animals.map((a) => "${a['animal_id']}: ${a['name']}").toList()}',
+        );
       } else {
         throw Exception('Failed to load animals');
       }
@@ -491,9 +506,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
       final response = await http.post(
         Uri.parse('$apiurl/api/breed'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'animal_id': animalId,
-        }),
+        body: json.encode({'animal_id': animalId}),
       );
 
       if (!mounted || _isFormCleared) return;
@@ -515,10 +528,12 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         }
         print('Breeds loaded: ${_breeds.length}');
         print(
-            'Breeds data: ${_breeds.map((b) => "${b['id']}: ${b['name']}").toList()}');
+          'Breeds data: ${_breeds.map((b) => "${b['id']}: ${b['name']}").toList()}',
+        );
       } else {
         throw Exception(
-            'Failed to load breeds - Status: ${response.statusCode}');
+          'Failed to load breeds - Status: ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Error loading breeds: $e');
@@ -583,7 +598,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
     }
   }
 
-// Load districts from API
+  // Load districts from API
   Future<void> _loadDistricts(String state) async {
     if (!mounted || _isFormCleared || state.isEmpty) return;
 
@@ -601,10 +616,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
       final response = await http.post(
         Uri.parse('$apiurl/api/load-districts'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'offset': 0,
-          'state': state,
-        }),
+        body: json.encode({'offset': 0, 'state': state}),
       );
 
       if (!mounted || _isFormCleared) return;
@@ -629,7 +641,9 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         }
         print('Districts loaded: ${_districts.length}');
       } else {
-        throw Exception('Failed to load districts - Status: ${response.statusCode}');
+        throw Exception(
+          'Failed to load districts - Status: ${response.statusCode}',
+        );
       }
     } catch (e) {
       print('Error loading districts: $e');
@@ -645,7 +659,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
     }
   }
 
-// Load cities from API
+  // Load cities from API
   Future<void> _loadCities(String district) async {
     if (district.trim().isEmpty || !mounted || _isFormCleared) return;
 
@@ -660,10 +674,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
       final response = await http.post(
         Uri.parse('$apiurl/api/load-cities'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'offset': 0,
-          'district': district,
-        }),
+        body: json.encode({'offset': 0, 'district': district}),
       );
 
       if (!mounted || _isFormCleared) return;
@@ -676,10 +687,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         if (data['searchitems'] != null) {
           citiesList = List<Map<String, dynamic>>.from(data['searchitems']);
           citiesList = citiesList.map((item) {
-            return {
-              'city_id': item['city_id'],
-              'city_name': item['city'],
-            };
+            return {'city_id': item['city_id'], 'city_name': item['city']};
           }).toList();
         } else if (data['cities'] != null) {
           citiesList = List<Map<String, dynamic>>.from(data['cities']);
@@ -695,7 +703,9 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
           });
         }
       } else {
-        throw Exception('Failed to load cities - Status: ${response.statusCode}');
+        throw Exception(
+          'Failed to load cities - Status: ${response.statusCode}',
+        );
       }
     } catch (e) {
       if (mounted && !_isFormCleared) {
@@ -725,7 +735,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
       if (!serviceEnabled) {
         setState(() {
           _locationError =
-          'Location services are disabled. Please enable them in settings.';
+              'Location services are disabled. Please enable them in settings.';
         });
         _showMessage(_locationError, isError: true);
         return;
@@ -747,35 +757,37 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
       if (permission == LocationPermission.deniedForever) {
         setState(() {
           _locationError =
-          'Location permissions are permanently denied. Please enable them in app settings.';
+              'Location permissions are permanently denied. Please enable them in app settings.';
         });
         _showMessage(_locationError, isError: true);
         return;
       }
 
       // Get current position with timeout
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          throw Exception('Location request timed out');
-        },
-      );
+      Position position =
+          await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high,
+          ).timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              throw Exception('Location request timed out');
+            },
+          );
 
       if (!mounted) return;
 
       // Get address from coordinates
       try {
-        List<Placemark> placemarks = await placemarkFromCoordinates(
-          position.latitude,
-          position.longitude,
-        ).timeout(
-          const Duration(seconds: 10),
-          onTimeout: () {
-            throw Exception('Address lookup timed out');
-          },
-        );
+        List<Placemark> placemarks =
+            await placemarkFromCoordinates(
+              position.latitude,
+              position.longitude,
+            ).timeout(
+              const Duration(seconds: 10),
+              onTimeout: () {
+                throw Exception('Address lookup timed out');
+              },
+            );
 
         if (!mounted) return;
 
@@ -794,7 +806,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
             // Only update location if not pre-filled from existing pet data
             if (widget.existingPetData == null) {
               _addressController.text =
-              '$street${street.isNotEmpty && subLocality.isNotEmpty ? ', ' : ''}$subLocality';
+                  '$street${street.isNotEmpty && subLocality.isNotEmpty ? ', ' : ''}$subLocality';
               _cityController.text = locality;
 
               if (locality.isNotEmpty) {
@@ -812,8 +824,10 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
           _longitude = position.longitude;
           _locationError = '';
         });
-        _showMessage('Location obtained but address lookup failed: $e',
-            isError: false);
+        _showMessage(
+          'Location obtained but address lookup failed: $e',
+          isError: false,
+        );
       }
     } catch (e) {
       if (!mounted) return;
@@ -823,10 +837,10 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         errorMessage = 'Location request timed out. Please try again.';
       } else if (e.toString().contains('denied')) {
         errorMessage =
-        'Location permission denied. Please grant location permission.';
+            'Location permission denied. Please grant location permission.';
       } else if (e.toString().contains('disabled')) {
         errorMessage =
-        'Location services are disabled. Please enable location services.';
+            'Location services are disabled. Please enable location services.';
       }
 
       setState(() {
@@ -927,24 +941,27 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Color(0xFF2d2d2d),
-          title: const Text('Select Image Source',
-              style: TextStyle(color: AppColors.white)),
+          title: Text(
+            'Select Image Source',
+            style: TextStyle(color: AppColors.white),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.photo_library, color: AppColors.green),
-                title: const Text('Gallery',
-                    style: TextStyle(color: AppColors.white)),
+                leading: Icon(Icons.photo_library, color: AppColors.green),
+                title: Text(
+                  'Gallery',
+                  style: TextStyle(color: AppColors.white),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImages();
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.camera_alt, color: AppColors.green),
-                title:
-                const Text('Camera', style: TextStyle(color: AppColors.white)),
+                leading: Icon(Icons.camera_alt, color: AppColors.green),
+                title: Text('Camera', style: TextStyle(color: AppColors.white)),
                 onTap: () {
                   Navigator.pop(context);
                   _pickImageFromCamera();
@@ -1031,15 +1048,16 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
 
   void _navigateToHomepage() {
     _showMessage(
-        'Pet added for adoption successfully! Redirecting to homepage...',
-        isError: false);
+      'Pet added for adoption successfully! Redirecting to homepage...',
+      isError: false,
+    );
 
     Future.delayed(Duration(seconds: 1), () {
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => HomePage()),
-              (route) => false,
+          (route) => false,
         );
       }
     });
@@ -1082,7 +1100,13 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
     }
 
     // Replace the existing breed validation with this:
-    bool isCustomAnimal = _selectedAnimalId == '0' || _animals.any((animal) => animal['animal_id'].toString() == _selectedAnimalId && animal['name']?.toLowerCase() == 'other');
+    bool isCustomAnimal =
+        _selectedAnimalId == '0' ||
+        _animals.any(
+          (animal) =>
+              animal['animal_id'].toString() == _selectedAnimalId &&
+              animal['name']?.toLowerCase() == 'other',
+        );
 
     if (isCustomAnimal) {
       // For custom animals, require custom breed name
@@ -1092,8 +1116,12 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
       }
     } else {
       // For regular animals, require either breed selection or custom breed name
-      if (_selectedBreedId == null && _breedNameController.text.trim().isEmpty) {
-        _showMessage('Please select a breed or enter custom breed name', isError: true);
+      if (_selectedBreedId == null &&
+          _breedNameController.text.trim().isEmpty) {
+        _showMessage(
+          'Please select a breed or enter custom breed name',
+          isError: true,
+        );
         return;
       }
     }
@@ -1118,8 +1146,9 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
       if (_addressController.text.trim().isEmpty ||
           _cityController.text.trim().isEmpty) {
         _showMessage(
-            'Location is required. Please enable location services or enter address manually.',
-            isError: true);
+          'Location is required. Please enable location services or enter address manually.',
+          isError: true,
+        );
         return;
       }
     }
@@ -1188,20 +1217,33 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         String base64Image = await _convertImageToBase64(_selectedImages[i]);
         requestBody['img${i + 1}'] = base64Image;
         print(
-            'Image ${i + 1} converted successfully: ${base64Image.length} characters');
+          'Image ${i + 1} converted successfully: ${base64Image.length} characters',
+        );
       }
 
       print('=== ADOPTION REQUEST DATA ===');
-      print('Customer ID: ${requestBody['c_id']} (Type: ${requestBody['c_id'].runtimeType})');
+      print(
+        'Customer ID: ${requestBody['c_id']} (Type: ${requestBody['c_id'].runtimeType})',
+      );
       print('Pet Name: ${requestBody['name']}');
       print('Animal: ${requestBody['animal']}');
-      print('Gender: ${requestBody['gender']} (Type: ${requestBody['gender'].runtimeType})');
-      print('City ID: ${requestBody['city_id']} (Type: ${requestBody['city_id'].runtimeType})');
-      print('Breed ID: ${requestBody['breed']} (Type: ${requestBody['breed'].runtimeType})');
+      print(
+        'Gender: ${requestBody['gender']} (Type: ${requestBody['gender'].runtimeType})',
+      );
+      print(
+        'City ID: ${requestBody['city_id']} (Type: ${requestBody['city_id'].runtimeType})',
+      );
+      print(
+        'Breed ID: ${requestBody['breed']} (Type: ${requestBody['breed'].runtimeType})',
+      );
       print('AntiRbs: ${requestBody['anti_rbs']}');
       print('Viral: ${requestBody['viral']}');
-      print('DOB: ${requestBody['dob']} (Type: ${requestBody['dob'].runtimeType})');
-      print('Color ID: ${requestBody['color']} (Type: ${requestBody['color'].runtimeType})');
+      print(
+        'DOB: ${requestBody['dob']} (Type: ${requestBody['dob'].runtimeType})',
+      );
+      print(
+        'Color ID: ${requestBody['color']} (Type: ${requestBody['color'].runtimeType})',
+      );
       print('Number of images: ${_selectedImages.length}');
       print('============================');
 
@@ -1412,12 +1454,19 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline, color: AppColors.blue, size: 20),
-                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.info_outline,
+                          color: AppColors.blue,
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'Pet information has been pre-filled. You can modify any details before submitting.',
-                            style: TextStyle(color: AppColors.blue, fontSize: 12),
+                            style: TextStyle(
+                              color: AppColors.blue,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ],
@@ -1438,11 +1487,14 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
                     child: Row(
                       children: [
                         Icon(Icons.warning, color: AppColors.red, size: 20),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             _locationError,
-                            style: TextStyle(color: AppColors.red, fontSize: 12),
+                            style: TextStyle(
+                              color: AppColors.red,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ],
@@ -1461,7 +1513,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
                   validator: Validators.validatePetName,
                 ),
 
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // Gender Dropdown
                 Column(
@@ -1478,17 +1530,17 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
                       onChanged: (value) =>
                           setState(() => _selectedGender = value),
                       validator: (value) =>
-                      value == null ? 'Please select gender' : null,
+                          value == null ? 'Please select gender' : null,
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // Date of Birth
                 _buildDateField(),
 
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // Animal and Breed Row - UPDATED
                 Row(
@@ -1509,7 +1561,13 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Show normal breed dropdown only if NOT custom animal
-                          if (!(_selectedAnimalId == '0' || _animals.any((animal) => animal['animal_id'].toString() == _selectedAnimalId && animal['name']?.toLowerCase() == 'other'))) ...[
+                          if (!(_selectedAnimalId == '0' ||
+                              _animals.any(
+                                (animal) =>
+                                    animal['animal_id'].toString() ==
+                                        _selectedAnimalId &&
+                                    animal['name']?.toLowerCase() == 'other',
+                              ))) ...[
                             _buildSectionTitle('Breed *'),
                             SizedBox(height: 8),
                             _buildBreedDropdownField(),
@@ -1526,10 +1584,15 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
                   ],
                 ),
 
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
-// Custom Animal Name Row - Show when custom animal selected
-                if (_selectedAnimalId == '0' || _animals.any((animal) => animal['animal_id'].toString() == _selectedAnimalId && animal['name']?.toLowerCase() == 'other'))
+                // Custom Animal Name Row - Show when custom animal selected
+                if (_selectedAnimalId == '0' ||
+                    _animals.any(
+                      (animal) =>
+                          animal['animal_id'].toString() == _selectedAnimalId &&
+                          animal['name']?.toLowerCase() == 'other',
+                    ))
                   Column(
                     children: [
                       _buildTextField(
@@ -1538,19 +1601,31 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
                         icon: Icons.pets,
                         isRequired: true,
                         validator: (value) {
-                          if (_selectedAnimalId == '0' && (value == null || value.trim().isEmpty)) {
+                          if (_selectedAnimalId == '0' &&
+                              (value == null || value.trim().isEmpty)) {
                             return 'Please enter custom type';
                           }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                     ],
                   ),
 
-// Only show custom breed field separately if regular animal but custom breed selected
-                if (!(_selectedAnimalId == '0' || _animals.any((animal) => animal['animal_id'].toString() == _selectedAnimalId && animal['name']?.toLowerCase() == 'other')) &&
-                    (_selectedBreedId == '0' || _breeds.any((breed) => breed['id'].toString() == _selectedBreedId && breed['name']?.toLowerCase() == 'other')))
+                // Only show custom breed field separately if regular animal but custom breed selected
+                if (!(_selectedAnimalId == '0' ||
+                        _animals.any(
+                          (animal) =>
+                              animal['animal_id'].toString() ==
+                                  _selectedAnimalId &&
+                              animal['name']?.toLowerCase() == 'other',
+                        )) &&
+                    (_selectedBreedId == '0' ||
+                        _breeds.any(
+                          (breed) =>
+                              breed['id'].toString() == _selectedBreedId &&
+                              breed['name']?.toLowerCase() == 'other',
+                        )))
                   Column(
                     children: [
                       _buildTextField(
@@ -1559,24 +1634,25 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
                         icon: Icons.category,
                         isRequired: true,
                         validator: (value) {
-                          if (_selectedBreedId == '0' && (value == null || value.trim().isEmpty)) {
+                          if (_selectedBreedId == '0' &&
+                              (value == null || value.trim().isEmpty)) {
                             return 'Please enter custom breed name';
                           }
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: 20),
                     ],
                   ),
 
                 // Color Dropdown
                 _buildColorDropdownField(),
 
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 _buildLocationSection(),
 
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // Address
                 _buildTextField(
@@ -1587,17 +1663,17 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
                   maxLines: 3,
                 ),
 
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // Anti RBS Date
                 _buildAntiRbsDateField(),
 
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // Viral Date
                 _buildViralDateField(),
 
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
 
                 // Note
                 _buildTextField(
@@ -1609,12 +1685,12 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
                   validator: Validators.validateNote,
                 ),
 
-                const SizedBox(height: 30),
+                SizedBox(height: 30),
 
                 // Image Upload Section
                 _buildImageUploadSection(),
 
-                const SizedBox(height: 40),
+                SizedBox(height: 40),
 
                 // Submit Button
                 SizedBox(
@@ -1631,26 +1707,28 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
                       disabledBackgroundColor: AppColors.grey,
                     ),
                     child: _isSubmitting
-                        ? const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: AppColors.white,
-                            strokeWidth: 2,
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  color: AppColors.white,
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                              SizedBox(width: 10),
+                              Text('Submitting...'),
+                            ],
+                          )
+                        : Text(
+                            'Add for Adoption',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        SizedBox(width: 10),
-                        Text('Submitting...'),
-                      ],
-                    )
-                        : const Text(
-                      'Add for Adoption',
-                      style: TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
                   ),
                 ),
               ],
@@ -1677,7 +1755,10 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('State *', style: TextStyle(color: AppColors.white, fontSize: 14)),
+                  Text(
+                    'State *',
+                    style: TextStyle(color: AppColors.white, fontSize: 14),
+                  ),
                   SizedBox(height: 8),
                   _buildStateDropdownField(),
                 ],
@@ -1692,7 +1773,10 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('District *', style: TextStyle(color: AppColors.white, fontSize: 14)),
+            Text(
+              'District *',
+              style: TextStyle(color: AppColors.white, fontSize: 14),
+            ),
             SizedBox(height: 8),
             _buildDistrictDropdownField(),
           ],
@@ -1704,7 +1788,10 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('City *', style: TextStyle(color: AppColors.white, fontSize: 14)),
+            Text(
+              'City *',
+              style: TextStyle(color: AppColors.white, fontSize: 14),
+            ),
             SizedBox(height: 8),
             _buildCityDropdownField(),
           ],
@@ -1713,59 +1800,62 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
     );
   }
 
-// State Dropdown Field
+  // State Dropdown Field
   Widget _buildStateDropdownField() {
-    bool selectedStateExists = _selectedState != null &&
+    bool selectedStateExists =
+        _selectedState != null &&
         _states.any((state) => state['state_name'] == _selectedState);
 
     return DropdownButtonFormField<String>(
       value: selectedStateExists ? _selectedState : null,
       items: _isLoadingStates || _states.isEmpty
           ? [
-        DropdownMenuItem<String>(
-          value: null,
-          child: Text(
-            _isLoadingStates ? 'Loading states...' : 'No states available',
-            style: TextStyle(color: AppColors.grey),
-          ),
-        ),
-      ]
+              DropdownMenuItem<String>(
+                value: null,
+                child: Text(
+                  _isLoadingStates
+                      ? 'Loading states...'
+                      : 'No states available',
+                  style: TextStyle(color: AppColors.grey),
+                ),
+              ),
+            ]
           : _states.map((Map<String, dynamic> state) {
-        return DropdownMenuItem<String>(
-          value: state['state_name'],
-          child: Text(
-            state['state_name'] ?? 'Unknown',
-            style: const TextStyle(color: AppColors.white),
-          ),
-        );
-      }).toList(),
+              return DropdownMenuItem<String>(
+                value: state['state_name'],
+                child: Text(
+                  state['state_name'] ?? 'Unknown',
+                  style: TextStyle(color: AppColors.white),
+                ),
+              );
+            }).toList(),
       onChanged: _isLoadingStates || _isFormCleared
           ? null
           : (value) {
-        if (value != null && value.isNotEmpty) {
-          setState(() {
-            _selectedState = value;
-            _selectedDistrict = null;
-            _districts = [];
-            _selectedCityId = null;
-            _selectedCityName = null;
-            _cities = [];
-          });
-          _loadDistricts(value);
-        }
-      },
+              if (value != null && value.isNotEmpty) {
+                setState(() {
+                  _selectedState = value;
+                  _selectedDistrict = null;
+                  _districts = [];
+                  _selectedCityId = null;
+                  _selectedCityName = null;
+                  _cities = [];
+                });
+                _loadDistricts(value);
+              }
+            },
       dropdownColor: Color(0xFF2d2d2d),
       decoration: InputDecoration(
         prefixIcon: Icon(Icons.map, color: AppColors.blue),
         suffixIcon: _isLoadingStates
             ? SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            color: AppColors.blue,
-            strokeWidth: 2,
-          ),
-        )
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: AppColors.blue,
+                  strokeWidth: 2,
+                ),
+              )
             : null,
         hintText: 'Select state',
         hintStyle: TextStyle(color: AppColors.grey),
@@ -1779,23 +1869,32 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.blue, width: 2),
+          borderSide: BorderSide(color: AppColors.blue, width: 2),
         ),
         filled: true,
         fillColor: Color(0xFF2d2d2d),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
       ),
-      style: const TextStyle(color: AppColors.white),
+      style: TextStyle(color: AppColors.white),
     );
   }
 
-// District Dropdown Field
+  // District Dropdown Field
   Widget _buildDistrictDropdownField() {
-    bool isDisabled = _selectedState == null || _isLoadingDistricts || _isFormCleared;
-    bool selectedDistrictExists = _selectedDistrict != null &&
-        _districts.any((district) => district['district_name'] == _selectedDistrict);
+    bool isDisabled =
+        _selectedState == null || _isLoadingDistricts || _isFormCleared;
+    bool selectedDistrictExists =
+        _selectedDistrict != null &&
+        _districts.any(
+          (district) => district['district_name'] == _selectedDistrict,
+        );
 
-    if (_selectedDistrict != null && !selectedDistrictExists && _districts.isNotEmpty) {
+    if (_selectedDistrict != null &&
+        !selectedDistrictExists &&
+        _districts.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && !_isFormCleared) {
           setState(() {
@@ -1812,54 +1911,59 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
       value: selectedDistrictExists ? _selectedDistrict : null,
       items: isDisabled || _districts.isEmpty
           ? [
-        DropdownMenuItem<String>(
-          value: null,
-          child: Text(
-            _selectedState == null
-                ? 'Select state first'
-                : _isLoadingDistricts
-                ? 'Loading districts...'
-                : 'No districts available',
-            style: TextStyle(color: AppColors.grey),
-          ),
-        ),
-      ]
+              DropdownMenuItem<String>(
+                value: null,
+                child: Text(
+                  _selectedState == null
+                      ? 'Select state first'
+                      : _isLoadingDistricts
+                      ? 'Loading districts...'
+                      : 'No districts available',
+                  style: TextStyle(color: AppColors.grey),
+                ),
+              ),
+            ]
           : _districts.map((Map<String, dynamic> district) {
-        return DropdownMenuItem<String>(
-          value: district['district_name'],
-          child: Text(
-            district['district_name'] ?? 'Unknown',
-            style: const TextStyle(color: AppColors.white),
-          ),
-        );
-      }).toList(),
+              return DropdownMenuItem<String>(
+                value: district['district_name'],
+                child: Text(
+                  district['district_name'] ?? 'Unknown',
+                  style: TextStyle(color: AppColors.white),
+                ),
+              );
+            }).toList(),
       onChanged: isDisabled
           ? null
           : (value) {
-        if (value != null && value.isNotEmpty) {
-          setState(() {
-            _selectedDistrict = value;
-            _selectedCityId = null;
-            _selectedCityName = null;
-            _cities = [];
-          });
-          _loadCities(value);
-        }
-      },
+              if (value != null && value.isNotEmpty) {
+                setState(() {
+                  _selectedDistrict = value;
+                  _selectedCityId = null;
+                  _selectedCityName = null;
+                  _cities = [];
+                });
+                _loadCities(value);
+              }
+            },
       dropdownColor: Color(0xFF2d2d2d),
       decoration: InputDecoration(
-        prefixIcon: Icon(Icons.location_city, color: isDisabled ? AppColors.grey : AppColors.blue),
+        prefixIcon: Icon(
+          Icons.location_city,
+          color: isDisabled ? AppColors.grey : AppColors.blue,
+        ),
         suffixIcon: _isLoadingDistricts
             ? SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            color: AppColors.blue,
-            strokeWidth: 2,
-          ),
-        )
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: AppColors.blue,
+                  strokeWidth: 2,
+                ),
+              )
             : null,
-        hintText: _selectedState == null ? 'Select state first' : 'Select district',
+        hintText: _selectedState == null
+            ? 'Select state first'
+            : 'Select district',
         hintStyle: TextStyle(color: AppColors.grey),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -1871,7 +1975,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.blue, width: 2),
+          borderSide: BorderSide(color: AppColors.blue, width: 2),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -1879,16 +1983,21 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         ),
         filled: true,
         fillColor: isDisabled ? AppColors.grey : Color(0xFF2d2d2d),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
       ),
       style: TextStyle(color: isDisabled ? AppColors.grey : AppColors.white),
     );
   }
 
-// City Dropdown Field
+  // City Dropdown Field
   Widget _buildCityDropdownField() {
-    bool isDisabled = _selectedDistrict == null || _isLoadingCities || _isFormCleared;
-    bool selectedCityExists = _selectedCityId != null &&
+    bool isDisabled =
+        _selectedDistrict == null || _isLoadingCities || _isFormCleared;
+    bool selectedCityExists =
+        _selectedCityId != null &&
         _cities.any((city) => city['city_id'].toString() == _selectedCityId);
 
     if (_selectedCityId != null && !selectedCityExists && _cities.isNotEmpty) {
@@ -1906,53 +2015,59 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
       value: selectedCityExists ? _selectedCityId : null,
       items: isDisabled || _cities.isEmpty
           ? [
-        DropdownMenuItem<String>(
-          value: null,
-          child: Text(
-            _selectedDistrict == null
-                ? 'Select district first'
-                : _isLoadingCities
-                ? 'Loading cities...'
-                : 'No cities available',
-            style: TextStyle(color: AppColors.grey),
-          ),
-        ),
-      ]
+              DropdownMenuItem<String>(
+                value: null,
+                child: Text(
+                  _selectedDistrict == null
+                      ? 'Select district first'
+                      : _isLoadingCities
+                      ? 'Loading cities...'
+                      : 'No cities available',
+                  style: TextStyle(color: AppColors.grey),
+                ),
+              ),
+            ]
           : _cities.map((Map<String, dynamic> city) {
-        return DropdownMenuItem<String>(
-          value: city['city_id'].toString(),
-          child: Text(
-            city['city_name'] ?? 'Unknown',
-            style: const TextStyle(color: AppColors.white),
-          ),
-        );
-      }).toList(),
+              return DropdownMenuItem<String>(
+                value: city['city_id'].toString(),
+                child: Text(
+                  city['city_name'] ?? 'Unknown',
+                  style: TextStyle(color: AppColors.white),
+                ),
+              );
+            }).toList(),
       onChanged: isDisabled
           ? null
           : (value) {
-        if (value != null && value.isNotEmpty) {
-          setState(() {
-            _selectedCityId = value;
-            _selectedCityName = _cities
-                .firstWhere((city) => city['city_id'].toString() == value,
-                orElse: () => {'city_name': null})['city_name'];
-          });
-        }
-      },
+              if (value != null && value.isNotEmpty) {
+                setState(() {
+                  _selectedCityId = value;
+                  _selectedCityName = _cities.firstWhere(
+                    (city) => city['city_id'].toString() == value,
+                    orElse: () => {'city_name': null},
+                  )['city_name'];
+                });
+              }
+            },
       dropdownColor: Color(0xFF2d2d2d),
       decoration: InputDecoration(
-        prefixIcon: Icon(Icons.location_on, color: isDisabled ? AppColors.grey : AppColors.blue),
+        prefixIcon: Icon(
+          Icons.location_on,
+          color: isDisabled ? AppColors.grey : AppColors.blue,
+        ),
         suffixIcon: _isLoadingCities
             ? SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            color: AppColors.blue,
-            strokeWidth: 2,
-          ),
-        )
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: AppColors.blue,
+                  strokeWidth: 2,
+                ),
+              )
             : null,
-        hintText: _selectedDistrict == null ? 'Select district first' : 'Select city',
+        hintText: _selectedDistrict == null
+            ? 'Select district first'
+            : 'Select city',
         hintStyle: TextStyle(color: AppColors.grey),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -1964,7 +2079,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.blue, width: 2),
+          borderSide: BorderSide(color: AppColors.blue, width: 2),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -1972,7 +2087,10 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         ),
         filled: true,
         fillColor: isDisabled ? AppColors.grey : Color(0xFF2d2d2d),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
       ),
       style: TextStyle(color: isDisabled ? AppColors.grey : AppColors.white),
     );
@@ -2012,18 +2130,20 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
                 Row(
                   children: [
                     Icon(Icons.location_on, color: AppColors.green, size: 20),
-                    const SizedBox(width: 8),
+                    SizedBox(width: 8),
                     Text(
                       'Current Location',
                       style: TextStyle(
-                          color: AppColors.white, fontWeight: FontWeight.w500),
+                        color: AppColors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
                   _currentPosition != null ||
-                      (_latitude != 0.0 && _longitude != 0.0)
+                          (_latitude != 0.0 && _longitude != 0.0)
                       ? 'Lat: ${_latitude.toStringAsFixed(6)}, Long: ${_longitude.toStringAsFixed(6)}'
                       : 'Getting location...',
                   style: TextStyle(color: AppColors.grey, fontSize: 12),
@@ -2042,8 +2162,11 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
                     onPressed: _isLoadingLocation ? null : _getCurrentLocation,
                     icon: Icon(Icons.refresh, size: 16),
                     label: Text(
-                        _isLoadingLocation ? 'Getting Location...' : 'Retry'),
-                    style: TextButton.styleFrom(foregroundColor: AppColors.green),
+                      _isLoadingLocation ? 'Getting Location...' : 'Retry',
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.green,
+                    ),
                   ),
                 ],
               ],
@@ -2070,32 +2193,35 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         RichText(
           text: TextSpan(
             text: label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
               color: AppColors.white,
             ),
             children: [
               if (isRequired)
-                const TextSpan(
+                TextSpan(
                   text: ' *',
                   style: TextStyle(color: AppColors.red),
                 ),
             ],
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         TextFormField(
           controller: controller,
           validator: validator,
           maxLines: maxLines,
           keyboardType: keyboardType,
           onChanged: onChanged,
-          style: const TextStyle(color: AppColors.white),
+          style: TextStyle(color: AppColors.white),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: AppColors.green),
-            hintText: 'Enter ${label.toLowerCase().replaceAll(' *', '')}', // ADDED: Dynamic hint text
-            hintStyle: TextStyle(color: AppColors.grey), // FIXED: Light grey instead of black
+            hintText:
+                'Enter ${label.toLowerCase().replaceAll(' *', '')}', // ADDED: Dynamic hint text
+            hintStyle: TextStyle(
+              color: AppColors.grey,
+            ), // FIXED: Light grey instead of black
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide(color: AppColors.grey),
@@ -2106,19 +2232,22 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.green, width: 2),
+              borderSide: BorderSide(color: AppColors.green, width: 2),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.red, width: 2),
+              borderSide: BorderSide(color: AppColors.red, width: 2),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.red, width: 2),
+              borderSide: BorderSide(color: AppColors.red, width: 2),
             ),
             filled: true,
             fillColor: Color(0xFF2d2d2d),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
           ),
         ),
       ],
@@ -2134,11 +2263,13 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         }
         return null;
       },
-      style: const TextStyle(color: AppColors.white),
+      style: TextStyle(color: AppColors.white),
       decoration: InputDecoration(
         prefixIcon: Icon(Icons.category, color: AppColors.green),
         hintText: 'Enter custom breed name',
-        hintStyle: TextStyle(color: AppColors.grey), // FIXED: Light grey for visibility
+        hintStyle: TextStyle(
+          color: AppColors.grey,
+        ), // FIXED: Light grey for visibility
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: AppColors.grey),
@@ -2149,19 +2280,22 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.green, width: 2),
+          borderSide: BorderSide(color: AppColors.green, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.red, width: 2),
+          borderSide: BorderSide(color: AppColors.red, width: 2),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.red, width: 2),
+          borderSide: BorderSide(color: AppColors.red, width: 2),
         ),
         filled: true,
         fillColor: Color(0xFF2d2d2d),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
       ),
     );
   }
@@ -2202,14 +2336,14 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
       hint: Text(hint, style: TextStyle(color: AppColors.grey)),
       items: enabled
           ? items.map((item) {
-        return DropdownMenuItem<String>(
-          value: item[valueKey].toString(),
-          child: Text(
-            item[displayKey].toString(),
-            style: TextStyle(color: AppColors.white),
-          ),
-        );
-      }).toList()
+              return DropdownMenuItem<String>(
+                value: item[valueKey].toString(),
+                child: Text(
+                  item[displayKey].toString(),
+                  style: TextStyle(color: AppColors.white),
+                ),
+              );
+            }).toList()
           : [],
       onChanged: enabled ? onChanged : null,
     );
@@ -2222,50 +2356,50 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
       value: _selectedAnimalId,
       items: _isLoadingAnimals || _animals.isEmpty
           ? [
-        DropdownMenuItem<String>(
-          value: null,
-          child: Text(
-            _isLoadingAnimals
-                ? 'Loading animals...'
-                : 'No animals available',
-            style: TextStyle(color: AppColors.grey),
-          ),
-        ),
-      ]
+              DropdownMenuItem<String>(
+                value: null,
+                child: Text(
+                  _isLoadingAnimals
+                      ? 'Loading animals...'
+                      : 'No animals available',
+                  style: TextStyle(color: AppColors.grey),
+                ),
+              ),
+            ]
           : _animals.map((Map<String, dynamic> animal) {
-        return DropdownMenuItem<String>(
-          value:
-          animal['animal_id']?.toString() ?? animal['id']?.toString(),
-          child: Text(
-            animal['name'] ?? animal['animal_name'] ?? 'Unknown',
-            style: const TextStyle(color: AppColors.white),
-          ),
-        );
-      }).toList(),
+              return DropdownMenuItem<String>(
+                value:
+                    animal['animal_id']?.toString() ?? animal['id']?.toString(),
+                child: Text(
+                  animal['name'] ?? animal['animal_name'] ?? 'Unknown',
+                  style: TextStyle(color: AppColors.white),
+                ),
+              );
+            }).toList(),
       onChanged: _isLoadingAnimals || _isFormCleared
           ? null
           : (value) {
-        if (value != null && value.isNotEmpty) {
-          setState(() {
-            _selectedAnimalId = value;
-            _selectedBreedId = null;
-            _breeds = [];
-          });
-          _loadBreeds(value);
-        }
-      },
+              if (value != null && value.isNotEmpty) {
+                setState(() {
+                  _selectedAnimalId = value;
+                  _selectedBreedId = null;
+                  _breeds = [];
+                });
+                _loadBreeds(value);
+              }
+            },
       dropdownColor: Color(0xFF2d2d2d),
       decoration: InputDecoration(
         prefixIcon: Icon(Icons.pets, color: AppColors.green),
         suffixIcon: _isLoadingAnimals
             ? SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            color: AppColors.green,
-            strokeWidth: 2,
-          ),
-        )
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: AppColors.green,
+                  strokeWidth: 2,
+                ),
+              )
             : null,
         hintText: 'Select animal type',
         hintStyle: TextStyle(color: AppColors.grey),
@@ -2279,14 +2413,16 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.green, width: 2),
+          borderSide: BorderSide(color: AppColors.green, width: 2),
         ),
         filled: true,
         fillColor: Color(0xFF2d2d2d),
-        contentPadding:
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
       ),
-      style: const TextStyle(color: AppColors.white),
+      style: TextStyle(color: AppColors.white),
     );
   }
 
@@ -2294,75 +2430,79 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
   Widget _buildBreedDropdownField() {
     bool isDisabled =
         _selectedAnimalId == null || _isLoadingBreeds || _isFormCleared;
-    bool isCustomAnimal = _selectedAnimalId == '0' ||
-        _animals.any((animal) =>
-        animal['animal_id'].toString() == _selectedAnimalId &&
-            animal['name']?.toLowerCase() == 'other');
+    bool isCustomAnimal =
+        _selectedAnimalId == '0' ||
+        _animals.any(
+          (animal) =>
+              animal['animal_id'].toString() == _selectedAnimalId &&
+              animal['name']?.toLowerCase() == 'other',
+        );
     return DropdownButtonFormField<String>(
       key: ValueKey('breed_dropdown_${_selectedBreedId ?? 'null'}'),
       value: _selectedBreedId,
       items: isDisabled || (_breeds.isEmpty && !isCustomAnimal)
           ? [
-        DropdownMenuItem<String>(
-          value: null,
-          child: Text(
-            _selectedAnimalId == null
-                ? 'Select animal first'
-                : isCustomAnimal
-                ? 'Enter custom breed below' // NEW: Better message for custom animals
-                : _isLoadingBreeds
-                ? 'Loading breeds...'
-                : 'No breeds available',
-            style: TextStyle(color: AppColors.white),
-          ),
-        ),
-      ]
+              DropdownMenuItem<String>(
+                value: null,
+                child: Text(
+                  _selectedAnimalId == null
+                      ? 'Select animal first'
+                      : isCustomAnimal
+                      ? 'Enter custom breed below' // NEW: Better message for custom animals
+                      : _isLoadingBreeds
+                      ? 'Loading breeds...'
+                      : 'No breeds available',
+                  style: TextStyle(color: AppColors.white),
+                ),
+              ),
+            ]
           : [
-        // Add "Other" option for custom breed entry when it's not a custom animal
-        if (!isCustomAnimal)
-          DropdownMenuItem<String>(
-            value: '0',
-            child: Text(
-              'Other (Custom)',
-              style: const TextStyle(color: AppColors.white),
-            ),
-          ),
-        // Add existing breeds
-        ..._breeds.map((Map<String, dynamic> breed) {
-          return DropdownMenuItem<String>(
-            value:
-            breed['id']?.toString() ?? breed['breed_id']?.toString(),
-            child: Text(
-              breed['name'] ?? breed['breed_name'] ?? 'Unknown',
-              style: const TextStyle(color: AppColors.white),
-            ),
-          );
-        }).toList(),
-      ],
+              // Add "Other" option for custom breed entry when it's not a custom animal
+              if (!isCustomAnimal)
+                DropdownMenuItem<String>(
+                  value: '0',
+                  child: Text(
+                    'Other (Custom)',
+                    style: TextStyle(color: AppColors.white),
+                  ),
+                ),
+              // Add existing breeds
+              ..._breeds.map((Map<String, dynamic> breed) {
+                return DropdownMenuItem<String>(
+                  value:
+                      breed['id']?.toString() ?? breed['breed_id']?.toString(),
+                  child: Text(
+                    breed['name'] ?? breed['breed_name'] ?? 'Unknown',
+                    style: TextStyle(color: AppColors.white),
+                  ),
+                );
+              }).toList(),
+            ],
       onChanged: isDisabled
           ? null
           : (value) {
-        if (mounted && !_isFormCleared) {
-          setState(() {
-            _selectedBreedId = value;
-          });
-        }
-      },
+              if (mounted && !_isFormCleared) {
+                setState(() {
+                  _selectedBreedId = value;
+                });
+              }
+            },
       dropdownColor: Color(0xFF2d2d2d),
       decoration: InputDecoration(
         prefixIcon: Icon(Icons.category, color: AppColors.green),
         suffixIcon: _isLoadingBreeds
             ? SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            color: AppColors.green,
-            strokeWidth: 2,
-          ),
-        )
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: AppColors.green,
+                  strokeWidth: 2,
+                ),
+              )
             : null,
-        hintText:
-        _selectedAnimalId == null ? 'Select animal first' : 'Select breed',
+        hintText: _selectedAnimalId == null
+            ? 'Select animal first'
+            : 'Select breed',
         hintStyle: TextStyle(color: AppColors.grey),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -2374,7 +2514,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: AppColors.green, width: 2),
+          borderSide: BorderSide(color: AppColors.green, width: 2),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -2382,8 +2522,10 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
         ),
         filled: true,
         fillColor: isDisabled ? AppColors.grey : Color(0xFF2d2d2d),
-        contentPadding:
-        const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
       ),
       style: TextStyle(color: isDisabled ? AppColors.grey : AppColors.white),
     );
@@ -2395,7 +2537,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RichText(
-          text: const TextSpan(
+          text: TextSpan(
             text: 'Color',
             style: TextStyle(
               fontSize: 16,
@@ -2410,52 +2552,52 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
             ],
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         DropdownButtonFormField<int>(
           value: _selectedColorId,
           items: _isLoadingColors || _colors.isEmpty
               ? [
-            DropdownMenuItem<int>(
-              value: null,
-              child: Text(
-                _isLoadingColors
-                    ? 'Loading colors...'
-                    : 'No colors available',
-                style: TextStyle(color: AppColors.grey),
-              ),
-            ),
-          ]
+                  DropdownMenuItem<int>(
+                    value: null,
+                    child: Text(
+                      _isLoadingColors
+                          ? 'Loading colors...'
+                          : 'No colors available',
+                      style: TextStyle(color: AppColors.grey),
+                    ),
+                  ),
+                ]
               : _colors.map((Map<String, dynamic> color) {
-            return DropdownMenuItem<int>(
-              value: color['id'],
-              child: Text(
-                color['color'] ??
-                    color['name'] ??
-                    color['color_name'] ??
-                    'Unknown',
-                style: const TextStyle(color: AppColors.white),
-              ),
-            );
-          }).toList(),
+                  return DropdownMenuItem<int>(
+                    value: color['id'],
+                    child: Text(
+                      color['color'] ??
+                          color['name'] ??
+                          color['color_name'] ??
+                          'Unknown',
+                      style: TextStyle(color: AppColors.white),
+                    ),
+                  );
+                }).toList(),
           onChanged: _isLoadingColors
               ? null
               : (value) {
-            setState(() {
-              _selectedColorId = value;
-            });
-          },
+                  setState(() {
+                    _selectedColorId = value;
+                  });
+                },
           dropdownColor: Color(0xFF2d2d2d),
           decoration: InputDecoration(
             prefixIcon: Icon(Icons.color_lens, color: AppColors.green),
             suffixIcon: _isLoadingColors
                 ? SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                color: AppColors.green,
-                strokeWidth: 2,
-              ),
-            )
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: AppColors.green,
+                      strokeWidth: 2,
+                    ),
+                  )
                 : null,
             hintText: 'Select color',
             hintStyle: TextStyle(color: AppColors.grey),
@@ -2469,14 +2611,16 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.green, width: 2),
+              borderSide: BorderSide(color: AppColors.green, width: 2),
             ),
             filled: true,
             fillColor: Color(0xFF2d2d2d),
-            contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
           ),
-          style: const TextStyle(color: AppColors.white),
+          style: TextStyle(color: AppColors.white),
         ),
       ],
     );
@@ -2495,7 +2639,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
             color: AppColors.white,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         InkWell(
           onTap: () => _selectAntiRbsDate(context),
           child: Container(
@@ -2509,7 +2653,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
             child: Row(
               children: [
                 Icon(Icons.medical_services, color: AppColors.green),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Text(
                   _selectedAntiRbsDate == null
                       ? 'Select Anti RBS vaccination date (optional)'
@@ -2541,7 +2685,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
             color: AppColors.white,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         InkWell(
           onTap: () => _selectViralDate(context),
           child: Container(
@@ -2555,7 +2699,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
             child: Row(
               children: [
                 Icon(Icons.medical_services, color: AppColors.green),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Text(
                   _selectedViralDate == null
                       ? 'Select viral vaccination date (optional)'
@@ -2580,7 +2724,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RichText(
-          text: const TextSpan(
+          text: TextSpan(
             text: 'Date of Birth',
             style: TextStyle(
               fontSize: 16,
@@ -2595,7 +2739,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
             ],
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         InkWell(
           onTap: () => _selectDate(context),
           child: Container(
@@ -2609,15 +2753,16 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
             child: Row(
               children: [
                 Icon(Icons.calendar_today, color: AppColors.green),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Text(
                   _selectedDate == null
                       ? 'Select date of birth'
                       : Validators.formatDate(_selectedDate!),
                   style: TextStyle(
                     fontSize: 16,
-                    color:
-                    _selectedDate == null ? AppColors.grey : AppColors.white,
+                    color: _selectedDate == null
+                        ? AppColors.grey
+                        : AppColors.white,
                   ),
                 ),
               ],
@@ -2633,7 +2778,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RichText(
-          text: const TextSpan(
+          text: TextSpan(
             text: 'Upload Images (Max 6)',
             style: TextStyle(
               fontSize: 16,
@@ -2648,7 +2793,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
 
         // Add Image Button
         if (_selectedImages.length < 6)
@@ -2659,18 +2804,22 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
               width: double.infinity,
               decoration: BoxDecoration(
                 border: Border.all(
-                    color: AppColors.grey,
-                    width: 2,
-                    style: BorderStyle.solid),
+                  color: AppColors.grey,
+                  width: 2,
+                  style: BorderStyle.solid,
+                ),
                 borderRadius: BorderRadius.circular(10),
                 color: Color(0xFF2d2d2d),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.add_photo_alternate,
-                      size: 40, color: AppColors.grey),
-                  const SizedBox(height: 8),
+                  Icon(
+                    Icons.add_photo_alternate,
+                    size: 40,
+                    color: AppColors.grey,
+                  ),
+                  SizedBox(height: 8),
                   Text(
                     'Tap to add images',
                     style: TextStyle(color: AppColors.grey, fontSize: 16),
@@ -2684,7 +2833,7 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
             ),
           ),
 
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
 
         // Display Selected Images
         if (_selectedImages.isNotEmpty)
@@ -2718,11 +2867,11 @@ class _AddAdoptionPageState extends State<AddAdoptionPage> {
                       onTap: () => _removeImage(index),
                       child: Container(
                         padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: AppColors.red,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.close,
                           size: 16,
                           color: AppColors.white,

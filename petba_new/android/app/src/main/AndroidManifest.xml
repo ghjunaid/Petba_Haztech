@@ -14,9 +14,9 @@
 
 
     <application
-        android:label="petba_new"
+        android:label="Petba"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/laucher_icon">
         <activity
             android:name=".MainActivity"
             android:exported="true"

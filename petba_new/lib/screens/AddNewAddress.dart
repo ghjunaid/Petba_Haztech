@@ -126,7 +126,9 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
         final List<dynamic> states = data['states'] ?? [];
 
         setState(() {
-          _stateOptions = states.map((e) => e['state_name'].toString()).toList();
+          _stateOptions = states
+              .map((e) => e['state_name'].toString())
+              .toList();
         });
       }
     } catch (e) {
@@ -187,7 +189,9 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
       data['address_id'] = widget.initialAddress!['adrs_id'];
     }
 
-    final endpoint = isEdit ? '$apiurl/api/updateAddress' : '$apiurl/api/addAddress';
+    final endpoint = isEdit
+        ? '$apiurl/api/updateAddress'
+        : '$apiurl/api/addAddress';
     final payload = json.encode(data);
 
     try {
@@ -225,7 +229,10 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
           ),
         );
       } else {
-        _showMessage(res['error'] ?? res['message'] ?? 'Request failed', isError: true);
+        _showMessage(
+          res['error'] ?? res['message'] ?? 'Request failed',
+          isError: true,
+        );
       }
     } catch (e) {
       _showMessage('Failed to add address: $e', isError: true);
@@ -250,11 +257,11 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
-      labelStyle: const TextStyle(color: Colors.grey),
+      labelStyle: TextStyle(color: Colors.grey),
       prefixIcon: Icon(icon, color: AppColors.green),
       filled: true,
       fillColor: AppColors.primaryColor,
-      hintStyle: const TextStyle(color: Colors.white54),
+      hintStyle: TextStyle(color: Colors.white54),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
     );
   }
@@ -262,7 +269,7 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
   Widget _inlineLoader() => SizedBox(
     width: 20,
     height: 20,
-    child: const CircularProgressIndicator(strokeWidth: 2, color: AppColors.green),
+    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.green),
   );
 
   // -----------------------------------------------------------
@@ -307,7 +314,7 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
                       : Colors.grey.shade400,
                 ),
               ),
-              const SizedBox(height: 6),
+              SizedBox(height: 6),
               Text(
                 opt['label'] as String,
                 style: TextStyle(
@@ -342,22 +349,22 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
               alignment: Alignment.centerLeft,
               child: Text(
                 'Location details',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                   color: AppColors.white,
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             TextFormField(
               controller: _pincodeController,
               decoration: _inputDecoration('Pincode', Icons.pin_drop),
-              style: const TextStyle(color: AppColors.white),
+              style: TextStyle(color: AppColors.white),
               keyboardType: TextInputType.number,
               validator: _validatePincode,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Country dropdown
             DropdownButtonFormField<String>(
@@ -371,8 +378,9 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
                     : null,
               ),
               items: _countryOptions
-                  .map((c) =>
-                      DropdownMenuItem<String>(value: c, child: Text(c)))
+                  .map(
+                    (c) => DropdownMenuItem<String>(value: c, child: Text(c)),
+                  )
                   .toList(),
               onChanged: (value) {
                 _selectedCountry = value;
@@ -381,9 +389,9 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
               },
               validator: (v) => v == null ? 'Select country' : null,
               dropdownColor: AppColors.primaryColor,
-              style: const TextStyle(color: AppColors.white),
+              style: TextStyle(color: AppColors.white),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // State dropdown
             DropdownButtonFormField<String>(
@@ -397,50 +405,51 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
                     : null,
               ),
               items: _stateOptions
-                  .map((s) =>
-                      DropdownMenuItem<String>(value: s, child: Text(s)))
+                  .map(
+                    (s) => DropdownMenuItem<String>(value: s, child: Text(s)),
+                  )
                   .toList(),
               onChanged: (value) => setState(() => _selectedState = value),
               validator: (v) => v == null ? 'Select state' : null,
               dropdownColor: AppColors.primaryColor,
-              style: const TextStyle(color: AppColors.white),
+              style: TextStyle(color: AppColors.white),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // City
             TextFormField(
               controller: _cityController,
               decoration: _inputDecoration('City', Icons.location_city),
-              style: const TextStyle(color: AppColors.white),
-              validator: (value) =>
-                  value == null || value.trim().isEmpty
-                      ? 'Please enter a city'
-                      : null,
+              style: TextStyle(color: AppColors.white),
+              validator: (value) => value == null || value.trim().isEmpty
+                  ? 'Please enter a city'
+                  : null,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Locality
             TextFormField(
               controller: _localityController,
-              decoration:
-                  _inputDecoration('Locality', Icons.location_searching),
-              style: const TextStyle(color: AppColors.white),
+              decoration: _inputDecoration(
+                'Locality',
+                Icons.location_searching,
+              ),
+              style: TextStyle(color: AppColors.white),
               validator: (value) => value == null || value.trim().isEmpty
                   ? 'Please enter a Locality'
                   : null,
             ),
 
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Divider(color: Colors.grey.shade800),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             // ---------------------------------------
             // Contact & Address
             // ---------------------------------------
-
             Align(
               alignment: Alignment.centerLeft,
-              child: const Text(
+              child: Text(
                 'Contact & address',
                 style: TextStyle(
                   fontSize: 15,
@@ -449,20 +458,19 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
 
             Row(
               children: [
                 Expanded(
                   child: TextFormField(
                     controller: _firstNameController,
-                    decoration:
-                        _inputDecoration('First name', Icons.person),
-                    style: const TextStyle(color: AppColors.white),
+                    decoration: _inputDecoration('First name', Icons.person),
+                    style: TextStyle(color: AppColors.white),
                     validator: Validators.validateName,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: TextFormField(
                     controller: _lastNameController,
@@ -470,23 +478,23 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
                       'Last name',
                       Icons.person_outline,
                     ),
-                    style: const TextStyle(color: AppColors.white),
+                    style: TextStyle(color: AppColors.white),
                     validator: Validators.validateName,
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             TextFormField(
               controller: _phoneController,
               decoration: _inputDecoration('Phone number', Icons.phone),
-              style: const TextStyle(color: AppColors.white),
+              style: TextStyle(color: AppColors.white),
               keyboardType: TextInputType.phone,
               validator: Validators.validatePhoneNumber,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             TextFormField(
               controller: _altPhoneController,
@@ -495,7 +503,7 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
                 Icons.phone_in_talk,
               ),
               keyboardType: TextInputType.phone,
-              style: const TextStyle(color: AppColors.white),
+              style: TextStyle(color: AppColors.white),
               validator: (v) {
                 if (v != null && v.trim().isNotEmpty) {
                   return Validators.validatePhoneNumber(v);
@@ -503,25 +511,24 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
                 return null;
               },
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             TextFormField(
               controller: _addressController,
               decoration: _inputDecoration('Address', Icons.location_on),
-              style: const TextStyle(color: AppColors.white),
+              style: TextStyle(color: AppColors.white),
               maxLines: 3,
               validator: Validators.validateAddress,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             TextFormField(
               controller: _landmarkController,
               decoration: _inputDecoration('Landmark', Icons.place),
-              style: const TextStyle(color: AppColors.white),
-              validator: (v) =>
-                  v == null || v.trim().isEmpty
-                      ? 'Please enter a landmark'
-                      : null,
+              style: TextStyle(color: AppColors.white),
+              validator: (v) => v == null || v.trim().isEmpty
+                  ? 'Please enter a landmark'
+                  : null,
             ),
           ],
         ),
@@ -549,7 +556,7 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
         child: _isSubmitting
             ? Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
+                children: [
                   SizedBox(
                     width: 20,
                     height: 20,
@@ -562,7 +569,7 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
                   Text('Saving address...'),
                 ],
               )
-            : const Text(
+            : Text(
                 'Save address',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
@@ -579,7 +586,7 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
     return Scaffold(
       backgroundColor: AppColors.primaryDark,
       appBar: AppBar(
-        title: const Text('Add New Address'),
+        title: Text('Add New Address'),
         backgroundColor: AppColors.primaryColor,
         foregroundColor: AppColors.white,
       ),
@@ -597,22 +604,22 @@ class _AddNewAddressPageState extends State<AddNewAddressPage> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'Address type',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: AppColors.white,
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 _buildAddressTypeSelector(),
-                const SizedBox(height: 30),
+                SizedBox(height: 30),
 
                 // ---------------------------------------------
                 // Main Form Card
                 // ---------------------------------------------
                 _buildFormCard(),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 _buildSubmitButton(),
               ],
             ),

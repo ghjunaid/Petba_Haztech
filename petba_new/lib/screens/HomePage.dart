@@ -8,6 +8,7 @@ import 'package:petba_new/screens/PetDetailPage.dart';
 import 'package:petba_new/screens/RescueScreen.dart';
 import 'package:petba_new/screens/ServicesScreen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import '../services/cart_notifier.dart';
 import 'AddAdoption.dart';
 import 'MyPets.dart';
@@ -30,6 +31,9 @@ import 'package:petba_new/chat/Pages/LoginScreen.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:petba_new/widgets/rescue_details_modal.dart';
 
+import 'package:petba_new/theme/app_color.dart';
+
+import '../providers/theme_provider.dart';
 import 'RescuePet.dart';
 import 'SignIn.dart';
 import 'SpecialProducts.dart';
@@ -463,8 +467,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final ac = AppThemeColors.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.primaryDark,
+      backgroundColor: ac.background,
 
       drawer: Drawer(
         child: ListView(
@@ -482,7 +489,7 @@ class _HomePageState extends State<HomePage> {
                     style: TextStyle(
                       fontSize: 38,
                       fontWeight: FontWeight.w900,
-                      color: AppColors.white,
+                      color: ac.textPrimary,
                     ),
                   ),
                 ],
@@ -490,10 +497,10 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               contentPadding: const EdgeInsets.only(left: 20.0),
-              leading: Icon(FontAwesomeIcons.home, color: AppColors.white),
+              leading: Icon(FontAwesomeIcons.home, color: ac.textPrimary),
               title: Text(
                 'Home',
-                style: TextStyle(fontSize: 18, color: AppColors.white),
+                style: TextStyle(fontSize: 18, color: ac.textPrimary),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -501,10 +508,10 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               contentPadding: const EdgeInsets.only(left: 20.0),
-              leading: Icon(FontAwesomeIcons.firstAid, color: AppColors.white),
+              leading: Icon(FontAwesomeIcons.firstAid, color: ac.textPrimary),
               title: Text(
                 'Rescue',
-                style: TextStyle(fontSize: 18, color: AppColors.white),
+                style: TextStyle(fontSize: 18, color: ac.textPrimary),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -518,10 +525,10 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               contentPadding: const EdgeInsets.only(left: 20.0),
-              leading: Icon(FontAwesomeIcons.add, color: AppColors.white),
+              leading: Icon(FontAwesomeIcons.add, color: ac.textPrimary),
               title: Text(
                 'Add Rescue',
-                style: TextStyle(fontSize: 18, color: AppColors.white),
+                style: TextStyle(fontSize: 18, color: ac.textPrimary),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -536,10 +543,10 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               contentPadding: const EdgeInsets.only(left: 20.0),
-              leading: Icon(FontAwesomeIcons.paw, color: AppColors.white),
+              leading: Icon(FontAwesomeIcons.paw, color: ac.textPrimary),
               title: Text(
                 'Adoption',
-                style: TextStyle(fontSize: 18, color: AppColors.white),
+                style: TextStyle(fontSize: 18, color: ac.textPrimary),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -551,10 +558,10 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               contentPadding: const EdgeInsets.only(left: 20.0),
-              leading: Icon(FontAwesomeIcons.blog, color: AppColors.white),
+              leading: Icon(FontAwesomeIcons.blog, color: ac.textPrimary),
               title: Text(
                 'My Pets',
-                style: TextStyle(fontSize: 18, color: AppColors.white),
+                style: TextStyle(fontSize: 18, color: ac.textPrimary),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -563,10 +570,10 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               contentPadding: const EdgeInsets.only(left: 20.0),
-              leading: Icon(FontAwesomeIcons.blog, color: AppColors.white),
+              leading: Icon(FontAwesomeIcons.blog, color: ac.textPrimary),
               title: Text(
                 'Blog',
-                style: TextStyle(fontSize: 18, color: AppColors.white),
+                style: TextStyle(fontSize: 18, color: ac.textPrimary),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -578,10 +585,10 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               contentPadding: const EdgeInsets.only(left: 20.0),
-              leading: Icon(FontAwesomeIcons.store, color: AppColors.white),
+              leading: Icon(FontAwesomeIcons.store, color: ac.textPrimary),
               title: Text(
                 'Store',
-                style: TextStyle(fontSize: 18, color: AppColors.white),
+                style: TextStyle(fontSize: 18, color: ac.textPrimary),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -590,10 +597,10 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               contentPadding: const EdgeInsets.only(left: 20.0),
-              leading: Icon(FontAwesomeIcons.spa, color: AppColors.white),
+              leading: Icon(FontAwesomeIcons.spa, color: ac.textPrimary),
               title: Text(
                 'Groomers',
-                style: TextStyle(fontSize: 18, color: AppColors.white),
+                style: TextStyle(fontSize: 18, color: ac.textPrimary),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -633,19 +640,16 @@ class _HomePageState extends State<HomePage> {
             ),
             Divider(
               thickness: 0.5,
-              color: AppColors.grey.withOpacity(0.40),
+              color: ac.textSecondary.withOpacity(0.40),
               indent: 10.0,
               endIndent: 10.0,
             ),
             ListTile(
               contentPadding: const EdgeInsets.only(left: 20.0),
-              leading: Icon(
-                FontAwesomeIcons.solidHeart,
-                color: AppColors.white,
-              ),
+              leading: Icon(FontAwesomeIcons.solidHeart, color: ac.textPrimary),
               title: Text(
                 'Wishlist',
-                style: TextStyle(fontSize: 18, color: AppColors.white),
+                style: TextStyle(fontSize: 18, color: ac.textPrimary),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -657,10 +661,10 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               contentPadding: const EdgeInsets.only(left: 20.0),
-              leading: Icon(FontAwesomeIcons.boxOpen, color: AppColors.white),
+              leading: Icon(FontAwesomeIcons.boxOpen, color: ac.textPrimary),
               title: Text(
                 'Orders',
-                style: TextStyle(fontSize: 18, color: AppColors.white),
+                style: TextStyle(fontSize: 18, color: ac.textPrimary),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -674,10 +678,10 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               contentPadding: const EdgeInsets.only(left: 20.0),
-              leading: Icon(FontAwesomeIcons.userAlt, color: AppColors.white),
+              leading: Icon(FontAwesomeIcons.userAlt, color: ac.textPrimary),
               title: Text(
                 'Profile',
-                style: TextStyle(fontSize: 18, color: AppColors.white),
+                style: TextStyle(fontSize: 18, color: ac.textPrimary),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -689,10 +693,10 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               contentPadding: const EdgeInsets.only(left: 20.0),
-              leading: Icon(FontAwesomeIcons.powerOff, color: AppColors.white),
+              leading: Icon(FontAwesomeIcons.powerOff, color: ac.textPrimary),
               title: Text(
                 'Log Out',
-                style: TextStyle(fontSize: 18, color: AppColors.white),
+                style: TextStyle(fontSize: 18, color: ac.textPrimary),
               ),
               onTap: () {
                 showDialog(
@@ -700,11 +704,11 @@ class _HomePageState extends State<HomePage> {
                   builder: (BuildContext context) {
                     return AlertDialog(
                       backgroundColor: const Color(0xFF1E1E1E),
-                      title: const Text(
+                      title: Text(
                         "Logout",
                         style: TextStyle(color: AppColors.white),
                       ),
-                      content: const Text(
+                      content: Text(
                         "Are you sure you want to logout?",
                         style: TextStyle(color: AppColors.white),
                       ),
@@ -713,7 +717,7 @@ class _HomePageState extends State<HomePage> {
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
-                          child: const Text(
+                          child: Text(
                             "Cancel",
                             style: TextStyle(color: AppColors.blue),
                           ),
@@ -731,7 +735,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             );
                           },
-                          child: const Text(
+                          child: Text(
                             "Logout",
                             style: TextStyle(color: AppColors.red),
                           ),
@@ -747,19 +751,19 @@ class _HomePageState extends State<HomePage> {
               alignment: Alignment.bottomCenter,
               child: Text(
                 '© 2025 Haztech',
-                style: TextStyle(fontSize: 10, color: AppColors.grey),
+                style: TextStyle(fontSize: 10, color: ac.textSecondary),
               ),
             ),
           ],
         ),
-        backgroundColor: AppColors.primaryColor,
+        backgroundColor: ac.surface,
       ),
       appBar: AppBar(
-        backgroundColor: AppColors.primaryColor,
+        backgroundColor: ac.surface,
         elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: Icon(Icons.menu, color: AppColors.blue),
+            icon: Icon(Icons.menu, color: ac.primary),
             onPressed: () {
               // Open the drawer instead of navigating to a new page
               Scaffold.of(context).openDrawer();
@@ -773,20 +777,20 @@ class _HomePageState extends State<HomePage> {
             SizedBox(width: 8),
             Text(
               'Petba',
-              style: TextStyle(color: AppColors.white, fontSize: 20),
+              style: TextStyle(color: ac.textPrimary, fontSize: 20),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.search_outlined, color: AppColors.blue),
+            icon: Icon(Icons.search_outlined, color: ac.primary),
             onPressed: () {
               // Add search functionality
             },
           ),
-          SizedBox(),
+          SizedBox(width: 4),
           IconButton(
-            icon: Icon(Icons.chat_bubble_outline, color: AppColors.blue),
+            icon: Icon(Icons.chat_bubble_outline, color: ac.primary),
             onPressed: () async {
               // Get user data from UserDataService
               final userData = await UserDataService.getUserData();
@@ -813,12 +817,21 @@ class _HomePageState extends State<HomePage> {
           ),
           SizedBox(),
           IconButton(
-            icon: Icon(Icons.notifications_outlined, color: AppColors.blue),
+            icon: Icon(Icons.notifications_outlined, color: ac.primary),
             onPressed: () {
               // Add notifications functionality
             },
           ),
-          SizedBox(),
+          SizedBox(width: 4),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Switch.adaptive(
+              value: themeProvider.isLightMode,
+              activeColor: AppColors.blue,
+              onChanged: (_) => themeProvider.toggleTheme(),
+            ),
+          ),
+          SizedBox(width: 4),
           // IconButton(
           //   icon: Icon(Icons.shopping_cart_outlined, color: AppColors.blue),
           //   onPressed: () {
@@ -858,7 +871,7 @@ class _HomePageState extends State<HomePage> {
 
             // Services section
             Text(
-              'Services',
+              'Service',
               style: TextStyle(
                 color: AppColors.white,
                 fontSize: 18,
@@ -880,7 +893,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 child: Text(
                   'Take A Snap',
-                  style: TextStyle(color: AppColors.white, fontSize: 16),
+                  style: TextStyle(color: ac.textPrimary, fontSize: 16),
                 ),
               ),
             ),
@@ -896,14 +909,14 @@ class _HomePageState extends State<HomePage> {
                     context,
                     Icons.medical_information,
                     'Vets',
-                    AppColors.green,
+                    ac.secondary,
                   ),
                   SizedBox(width: 10),
                   _buildServiceIcon(
                     context,
                     Icons.home,
                     'Shelters',
-                    AppColors.blue,
+                    ac.primary,
                   ),
                   SizedBox(width: 10),
                   _buildServiceIcon(
@@ -948,7 +961,7 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.white,
+                    color: ac.textPrimary,
                   ),
                 ),
                 Row(
@@ -958,7 +971,7 @@ class _HomePageState extends State<HomePage> {
                         width: 16,
                         height: 16,
                         child: CircularProgressIndicator(
-                          color: AppColors.blue,
+                          color: ac.primary,
                           strokeWidth: 2,
                         ),
                       ),
@@ -984,7 +997,7 @@ class _HomePageState extends State<HomePage> {
                       },
                       child: Text(
                         'View All',
-                        style: TextStyle(color: AppColors.blue, fontSize: 14),
+                        style: TextStyle(color: ac.primary, fontSize: 14),
                       ),
                     ),
                   ],
@@ -1006,7 +1019,7 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.white,
+                    color: ac.textPrimary,
                   ),
                 ),
                 TextButton(
@@ -1035,7 +1048,7 @@ class _HomePageState extends State<HomePage> {
                       child: Text(
                         "No pets in your region",
                         style: TextStyle(
-                          color: AppColors.grey,
+                          color: ac.textSecondary,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -1048,7 +1061,7 @@ class _HomePageState extends State<HomePage> {
             Text(
               'Products',
               style: TextStyle(
-                color: AppColors.white,
+                color: ac.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -1065,7 +1078,7 @@ class _HomePageState extends State<HomePage> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.white,
+                      color: ac.textPrimary,
                     ),
                   ),
                   TextButton(
@@ -1077,7 +1090,7 @@ class _HomePageState extends State<HomePage> {
                     },
                     child: Text(
                       'View All',
-                      style: TextStyle(color: AppColors.blue, fontSize: 14),
+                      style: TextStyle(color: ac.primary, fontSize: 14),
                     ),
                   ),
                 ],
@@ -1096,7 +1109,7 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.white,
+                    color: ac.textPrimary,
                   ),
                 ),
                 TextButton(
@@ -1108,7 +1121,7 @@ class _HomePageState extends State<HomePage> {
                   },
                   child: Text(
                     'View All',
-                    style: TextStyle(color: AppColors.blue, fontSize: 14),
+                    style: TextStyle(color: ac.primary, fontSize: 14),
                   ),
                 ),
               ],
@@ -1127,7 +1140,7 @@ class _HomePageState extends State<HomePage> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.white,
+                      color: ac.textPrimary,
                     ),
                   ),
                   TextButton(
@@ -1141,7 +1154,7 @@ class _HomePageState extends State<HomePage> {
                     },
                     child: Text(
                       'View All',
-                      style: TextStyle(color: AppColors.blue, fontSize: 14),
+                      style: TextStyle(color: ac.primary, fontSize: 14),
                     ),
                   ),
                 ],
@@ -1156,7 +1169,7 @@ class _HomePageState extends State<HomePage> {
               Text(
                 'Discounts For You',
                 style: TextStyle(
-                  color: AppColors.white,
+                  color: ac.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1172,7 +1185,7 @@ class _HomePageState extends State<HomePage> {
                 child: Center(
                   child: Text(
                     'Special Offers Coming Soon!',
-                    style: TextStyle(color: AppColors.grey, fontSize: 16),
+                    style: TextStyle(color: ac.textSecondary, fontSize: 16),
                   ),
                 ),
               ),
@@ -1189,13 +1202,13 @@ class _HomePageState extends State<HomePage> {
         height: 60,
         child: FloatingActionButton(
           onPressed: () => _showOptionsMenu(context),
-          backgroundColor: AppColors.primaryColor,
+          backgroundColor: ac.surface,
           elevation: 6,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: BorderSide(color: AppColors.grey, width: 2),
+            side: BorderSide(color: ac.textSecondary, width: 2),
           ),
-          child: Icon(Icons.add, color: AppColors.grey, size: 24),
+          child: Icon(Icons.add, color: ac.textSecondary, size: 24),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
